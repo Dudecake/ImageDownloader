@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>../images/github plaatje.png</file>
+    </qresource>
+</RCC>

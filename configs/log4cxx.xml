@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<configuration debug="false" xmlns:log4j="http://jakarta.apache.org/log4j/">
+	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%m%n" />
+		</layout>
+		<filter class="org.apache.log4j.filter.LevelMatchFilter">
+			<param name="levelToMatch" value="INFO" />
+			<param name="acceptOnMatch" value="true" />
+		</filter>
+		<filter class="org.apache.log4j.filter.DenyAllFilter">
+		</filter>
+	</appender>
+	<appender name="stderr" class="org.apache.log4j.ConsoleAppender">
+		<param name="Target" value="System.err" />
+		<param name="Threshold" value="WARN" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%m%n" />
+		</layout>
+	</appender>
+	<appender name="file" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="/var/lib/ImageDownloader/Imagedownloader.log" />
+		<param name="MaxFileSize" value="100KB" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %5p  %X{pid} --- [%14t] %-12.12logger{39} : %m%n" />
+		</layout>
+	</appender>
+	<root>
+		<priority value="all" />
+		<appender-ref ref="stdout" />
+		<appender-ref ref="stderr" />
+		<appender-ref ref="file" />
+	</root>
+</configuration>
