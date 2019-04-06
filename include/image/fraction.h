@@ -36,8 +36,6 @@ namespace image
                 }
             }
     };
-};
-
-#include "image/fraction.h"
+}; // namespace image
 
 #endif // FRACTION_H

@@ -5,17 +5,14 @@
 #include <vector>
 #include <mutex>
 #include <cstdio>
+#include <curl/curl.h>
 #include <log4cxx/logger.h>
-
-typedef void CURL;
 
 namespace network
 {
     class DownloadHelper {
         private:
-            static log4cxx::LoggerPtr logger;
             static std::mutex mutex;
-            static std::unique_ptr<CURL, void(*)(CURL*)> curl;
             static size_t writeCallBack(void *contents, size_t size, size_t nmemb, void *userp)
             {
                 (static_cast<std::string* const>(userp))->append(static_cast<char*>(contents), size * nmemb);
@@ -27,6 +24,16 @@ namespace network
                 std::vector<char> * const target = static_cast<std::vector<char>*>(userp);
                 target->insert(target->end(), data, data + (size * nmemb));
                 return size * nmemb;
+            }
+            static log4cxx::LoggerPtr& getLogger()
+            {
+                static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("DownloadHelper");
+                return logger;
+            }
+            static CURL* getCurl()
+            {
+                static std::unique_ptr<CURL, void(*)(CURL*)> curl = std::unique_ptr<CURL, void(*)(CURL*)>(curl_easy_init(), &curl_easy_cleanup);
+                return curl.get();
             }
         public:
             DownloadHelper() = delete;

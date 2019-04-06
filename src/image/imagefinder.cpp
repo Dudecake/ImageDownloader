@@ -1,24 +1,23 @@
 #include "image/imagefinder.h"
-#include "image/imageinfo.h"
+
 #include "image/fraction.h"
+#include "image/imageinfo.h"
 #include "network/downloadhelper.h"
 
 #include <filesystem>
 
 #include <QRegularExpression>
 
-log4cxx::LoggerPtr image::ImageFinder::logger = log4cxx::Logger::getLogger("ImageFinder");
-
 image::ImageFinder::ImageFinder(const std::string &dir)
 {
-    iterators.push_back(std::filesystem::directory_iterator(dir + "/4.3"));
-    iterators.push_back(std::filesystem::directory_iterator(dir + "/5.3"));
-    iterators.push_back(std::filesystem::directory_iterator(dir + "/5.4"));
-    iterators.push_back(std::filesystem::directory_iterator(dir + "/9.16"));
-    iterators.push_back(std::filesystem::directory_iterator(dir + "/16.9"));
-    iterators.push_back(std::filesystem::directory_iterator(dir + "/16.10"));
-    iterators.push_back(std::filesystem::directory_iterator(dir + "/32.9"));
-    iterators.push_back(std::filesystem::directory_iterator(dir + "/Anders"));
+    iterators.emplace_back(dir + "/4.3");
+    iterators.emplace_back(dir + "/5.3");
+    iterators.emplace_back(dir + "/5.4");
+    iterators.emplace_back(dir + "/9.16");
+    iterators.emplace_back(dir + "/16.9");
+    iterators.emplace_back(dir + "/16.10");
+    iterators.emplace_back(dir + "/32.9");
+    iterators.emplace_back(dir + "/Anders");
 }
 
 void image::ImageFinder::find()
@@ -33,7 +32,7 @@ void image::ImageFinder::find()
             {
                 std::string folderName = item.path().parent_path().filename().generic_string() + "/";
                 counter++;
-                if (folderName.compare("16.9/") == 0 || folderName.compare("16.10/") == 0)
+                if (folderName == "16.9/" || folderName == "16.10/")
                 {
                     ImageInfo info(item.path());
                     std::string imageName = item.path().filename();
@@ -45,14 +44,14 @@ void image::ImageFinder::find()
                     }
                     catch (const fs::filesystem_error &ex)
                     {
-                        LOG4CXX_ERROR(logger, "Failed to create link:\n" << ex.what());
+                        LOG4CXX_ERROR(getLogger(), "Failed to create link:\n" << ex.what());
                         throw;
                     }
                 }
             }
         }
     }
-    LOG4CXX_INFO(logger, "found "<< counter << " images");
+    LOG4CXX_INFO(getLogger(), "found "<< counter << " images");
 }
 
 //bool image::ImageFinder::rebuildChecksums()
@@ -142,7 +141,7 @@ bool image::ImageFinder::rebuildDB()
             ImageInfo info(item.path());
             int width = info.getWidth();
             int height = info.getHeight();
-            if (folderName.compare("16.9/") == 0 || folderName.compare("16.10/") == 0)
+            if (folderName == "16.9/" || folderName == "16.10/")
             {
                 if (width >= 2560)
                 {
@@ -153,11 +152,11 @@ bool image::ImageFinder::rebuildDB()
                         try
                         {
                             fs::create_symlink(linkTarget, link);
-                            LOG4CXX_INFO(logger, "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
+                            LOG4CXX_INFO(getLogger(), "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
                         }
                         catch (const fs::filesystem_error &ex)
                         {
-                            LOG4CXX_ERROR(logger, "Failed to create link:\n" << ex.what());
+                            LOG4CXX_ERROR(getLogger(), "Failed to create link:\n" << ex.what());
                             throw;
                         }
                     }
@@ -178,14 +177,16 @@ bool image::ImageFinder::rebuildDB()
                         try
                         {
                             if (!fs::exists(linkDir))
+                            {
                                 fs::create_directories(linkDir);
+                            }
                             const std::string linkTarget = "../.." + folderName + imageName;
                             fs::create_symlink(linkTarget, link);
-                            LOG4CXX_INFO(logger, "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
+                            LOG4CXX_INFO(getLogger(), "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
                         }
                         catch (const fs::filesystem_error &ex)
                         {
-                            LOG4CXX_ERROR(logger, "Failed to create link:\n" << ex.what());
+                            LOG4CXX_ERROR(getLogger(), "Failed to create link:\n" << ex.what());
                             throw;
                         }
                     }
@@ -218,6 +219,6 @@ bool image::ImageFinder::rebuildDB()
             }
         }
     }
-    LOG4CXX_INFO(logger, "found "<< counter << " images");
+    LOG4CXX_INFO(getLogger(), "found "<< counter << " images");
     return true;
 }

@@ -1,8 +1,6 @@
 #include "network/danbooruworker.h"
 #include "network/downloadhelper.h"
 
-log4cxx::LoggerPtr network::DanbooruWorker::logger = log4cxx::Logger::getLogger("DanbooruWorker");
-
 network::DanbooruWorker::DanbooruWorker(const std::function<void(const image::Image::image_s &)> &callback, const image::Image::Rating &ratingFilter, const std::string &filter, const std::string &tags, const std::string &upstreamName)
     : ImageWorker(callback, ratingFilter, upstreamName),
       minWidth(-1),
@@ -29,7 +27,9 @@ network::DanbooruWorker::DanbooruWorker(const std::function<void(const image::Im
                     this->minHeight = std::stoi(heightList.at(0));
                     this->maxHeight = std::stoi(heightList.at(1));
                     if (this->maxHeight == 0)
+                    {
                         this->maxHeight = std::numeric_limits<int>::max();
+                    }
                 }
                 else
                 {
@@ -58,10 +58,14 @@ network::DanbooruWorker::DanbooruWorker(const std::function<void(const image::Im
             this->filter = ss.str();
         }
         else
+        {
             this->tags = fullTags;
+        }
     }
     else
+    {
         this->tags = fullTags;
+    }
     this->worker = std::thread(std::function<void()>([&](){ DanbooruWorker::run(); }));
 }
 
@@ -75,14 +79,16 @@ void network::DanbooruWorker::run()
         const nlohmann::json reply = nlohmann::json::parse(DownloadHelper::download(url));
         if(!reply.is_array())
         {
-            LOG4CXX_WARN(logger, "Reply is not an array, is " << reply.type_name());
+            LOG4CXX_WARN(getLogger(), "Reply is not an array, is " << reply.type_name());
             return;
         }
         int count = 0;
         for (const auto &item : reply)
         {
             if (!running)
+            {
                 break;
+            }
             count++;
             if (const std::optional<image::Image::image_s> image = image::Image::fromDanbooru(item); image)
             {
@@ -91,11 +97,11 @@ void network::DanbooruWorker::run()
                 {
                     continue;
                 }
-                else if (rating == 'q' && !(ratingFilter & image::Image::Rating::Questionable))
+                if (rating == 'q' && !(ratingFilter & image::Image::Rating::Questionable))
                 {
                     continue;
                 }
-                else if (rating == 'e' && !(ratingFilter & image::Image::Rating::Explicit))
+                if (rating == 'e' && !(ratingFilter & image::Image::Rating::Explicit))
                 {
                     continue;
                 }
@@ -152,16 +158,22 @@ void network::DanbooruWorker::run()
                     }
                 }
                 if (image::Image::isDownloaded(image::Image::image_download_s{ image->checksum, image->imageID, image->origin }))
+                {
                     continue;
+                }
                 if (enqueue(*image))
+                {
                     std::this_thread::sleep_for(100ms);
+                }
                 else
+                {
                     return;
+                }
             }
         }
         if (count == 0)
         {
-            LOG4CXX_INFO(logger, "Completed search");
+            LOG4CXX_INFO(getLogger(), "Completed search");
             return;
         }
     }

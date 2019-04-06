@@ -2,21 +2,24 @@
 #include "ui_mainwindow.h"
 
 #include "image/imagefinder.h"
+#include "network/danbooruworker.h"
 #include "network/imageworker.h"
 #include "network/konachanworker.h"
-#include "network/danbooruworker.h"
 #include "network/workerfactory.h"
 
-#include <QString>
-#include <QSettings>
-#include <QComboBox>
-#include <QPushButton>
-#include <QPlainTextEdit>
+#include "network/danbooruworker.h"
+#include "network/imageworker.h"
+#include "network/konachanworker.h"
+#include "network/workerfactory.h"
 
 #include <deque>
 #include <future>
 
-log4cxx::LoggerPtr MainWindow::logger = log4cxx::Logger::getLogger("MainWindow");
+#include <QComboBox>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QSettings>
+#include <QString>
 
 MainWindow::MainWindow(const std::vector<std::string> &args, QWidget *parent) :
     QMainWindow(parent), depth(0), images(51), workerFactory(network::WorkerFactory::getInstance()), ui(std::make_unique<Ui::MainWindow>())
@@ -41,7 +44,7 @@ MainWindow::MainWindow(const std::vector<std::string> &args, QWidget *parent) :
         workerFactory->withFilter(args.front());
     }
     workerFactory->withCallback([&](const image::Image::image_s &image){
-        LOG4CXX_INFO(logger, "found image with a resolution of " << image.width << " x " << image.height <<" \""<< image.imageUrl << "\"");
+        LOG4CXX_INFO(getLogger(), "found image with a resolution of " << image.width << " x " << image.height <<" \""<< image.imageUrl << "\"");
         images.emplace_back(image);
         ui->queueLabel->setText(QString::number(static_cast<int>(images.size())) + " items in queue");
     });
@@ -54,7 +57,7 @@ MainWindow::MainWindow(const std::vector<std::string> &args, QWidget *parent) :
 
 void MainWindow::addToQueue(const image::Image::image_s &image)
 {
-    LOG4CXX_INFO(logger, "Found image with a resolution of " << image.width << " x " << image.height <<" \"" << image.imageUrl << "\"");
+    LOG4CXX_INFO(getLogger(), "Found image with a resolution of " << image.width << " x " << image.height <<" \"" << image.imageUrl << "\"");
     images.emplace_back(image);
     ui->queueLabel->setText(QString::number(static_cast<int>(images.size())) + " items in queue");
 }
@@ -73,7 +76,7 @@ void MainWindow::setSearchOptions()
 
 void MainWindow::skipSingle()
 {
-    if (images.size() > 0)
+    if (!images.empty())
     {
         currentImage = images.front();
         images.pop_front();
@@ -91,7 +94,7 @@ void MainWindow::skipMultiple(const int &count)
 {
     for (int i = 0; i < count; i++)
     {
-        if (images.size() > 0)
+        if (!images.empty())
         {
             currentImage = images.front();
             images.pop_front();
@@ -100,7 +103,7 @@ void MainWindow::skipMultiple(const int &count)
             depth++;
         }
     }
-    if (!currentImage.nullOrEmpty() && images.size() > 0)
+    if (!currentImage.nullOrEmpty() && !images.empty())
     {
         ui->queueLabel->setText(QString::number(images.size()) + " items in queue");
         ui->frame->setPixmap(currentImage.getSample());
@@ -157,7 +160,7 @@ void MainWindow::startNewWorker()
     worker = workerFactory->build();
     if (depth > 0)
     {
-        LOG4CXX_INFO(logger, "Starting new search after reaching a depth of " << depth);
+        LOG4CXX_INFO(getLogger(), "Starting new search after reaching a depth of " << depth);
     }
     depth = 0;
     images.clear();
@@ -168,12 +171,14 @@ void MainWindow::startNewWorker()
 void MainWindow::handleButton()
 {
     QString senderName = sender()->objectName();
-    if (senderName.compare("optionsButton") == 0)
+    if (senderName == "optionsButton")
     {
         if (dialog.isHidden())
+        {
             dialog.show();
+        }
     }
-    else if (senderName.compare("saveButton") == 0)
+    else if (senderName == "saveButton")
     {
         if (!currentImage.nullOrEmpty())
         {
@@ -182,19 +187,19 @@ void MainWindow::handleButton()
             skipSingle();
         }
     }
-    else if (senderName.compare("nextButton") == 0)
+    else if (senderName == "nextButton")
     {
         skipSingle();
     }
-    else if (senderName.compare("skipButton") == 0)
+    else if (senderName == "skipButton")
     {
         skipMultiple(5);
     }
-    else if (senderName.compare("endButton") == 0)
+    else if (senderName == "endButton")
     {
         skipMultiple(static_cast<int>(images.size()) - 1);
     }
-    else if (senderName.compare("blackListButton") == 0)
+    else if (senderName == "blackListButton")
     {
         if (!currentImage.nullOrEmpty())
         {
@@ -208,15 +213,19 @@ void MainWindow::handleButton()
 void MainWindow::handleSelect(const int &index)
 {
     QString senderName = sender()->objectName();
-    if (index > -1) currentIndex = index;
-    if (senderName.compare("resBox") == 0)
+    if (index > -1)
+    {
+        currentIndex = index;
+    }
+    if (senderName == ("resBox"))
     {
         startNewWorker();
     }
 }
 
-void MainWindow::closeEvent(QCloseEvent*)
+void MainWindow::closeEvent(QCloseEvent *event)
 {
+    static_cast<void>(event);
     QSettings settings;
     settings.setValue("mainWindowGeometry", saveGeometry());
     settings.setValue("mainWindowState", saveState());

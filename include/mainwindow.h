@@ -29,12 +29,16 @@ class MainWindow : public QMainWindow
 
 public:
     std::deque<image::Image> images;
-    void closeEvent(QCloseEvent*);
+    void closeEvent(QCloseEvent *event);
     explicit MainWindow(const std::vector<std::string> &args, QWidget *parent = nullptr);
     ~MainWindow();
 
     private:
-        static log4cxx::LoggerPtr logger;
+        static log4cxx::LoggerPtr &getLogger()
+        {
+            static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("MainWindow");
+            return logger;
+        }
         int currentIndex;
         int depth;
         SearchDialog dialog;
@@ -45,7 +49,7 @@ public:
         void skipSingle();
         void skipMultiple(const int &count = 5);
         void startNewWorker();
-        void addToQueue(const image::Image::image_s &);
+        void addToQueue(const image::Image::image_s &image);
 
 private slots:
     void handleButton();

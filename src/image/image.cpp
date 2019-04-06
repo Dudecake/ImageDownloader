@@ -6,7 +6,6 @@
 
 std::string image::Image::dbName = std::string();
 std::shared_mutex image::Image::readWriteLock;
-log4cxx::LoggerPtr image::Image::logger = log4cxx::Logger::getLogger("Image");
 
 using namespace sqlite_orm;
 
@@ -20,13 +19,10 @@ bool image::Image::isDownloaded(const image_download_s &image)
         //contains image
         res = true;
     }
-    else
+    else if (auto result = storage.select(count(&Wallpaper::imageId), where(eq(&Wallpaper::imageId, image.imageID) and eq(&Wallpaper::source, image.source))); result.front() > 0)
     {
-        if (auto result = storage.select(count(&Wallpaper::imageId), where(eq(&Wallpaper::imageId, image.imageID) and eq(&Wallpaper::source, image.source))); result.front() > 0)
-        {
-            //contains image
-            res = true;
-        }
+        //contains image
+        res = true;
     }
     if (!res && image.useBlacklist)
     {
@@ -35,13 +31,10 @@ bool image::Image::isDownloaded(const image_download_s &image)
             //contains image
             res = true;
         }
-        else
+        else if (auto result = storage.select(count(&Blacklist::imageId), where(eq(&Blacklist::imageId, image.imageID) and eq(&Blacklist::source, image.source))); result.front() > 0)
         {
-            if (auto result = storage.select(count(&Blacklist::imageId), where(eq(&Blacklist::imageId, image.imageID) and eq(&Blacklist::source, image.source))); result.front() > 0)
-            {
-                //contains image
-                res = true;
-            }
+            //contains image
+            res = true;
         }
     }
     return res;
@@ -61,15 +54,15 @@ void image::Image::redownloadAll()
             {
                 std::vector<std::string> dimensions = split(wallpaper.dimensions, 'x');
                 std::string imageUrl;
-                if (wallpaper.source.compare("konachan.com") == 0 || wallpaper.source.compare("yande.re") == 0)
+                if (wallpaper.source == "konachan.com" || wallpaper.source == "yande.re")
                 {
                     imageUrl = wallpaper.source + "/image/" + wallpaper.md5 + "/" + path.filename().string();
                 }
-                else if (wallpaper.source.compare("danbooru.donmai.us") == 0)
+                else if (wallpaper.source == "danbooru.donmai.us")
                 {
                     imageUrl = wallpaper.source + "/data/" + path.filename().string();
                 }
-                else if (wallpaper.source.compare("gelbooru.com") == 0)
+                else if (wallpaper.source == "gelbooru.com")
                 {
                     imageUrl = "https://simg3.gelbooru.com/images/" + wallpaper.md5.substr(0, 2) + '/' + wallpaper.md5.substr(2, 4) + '/' + path.filename().string();
                 }
@@ -79,14 +72,14 @@ void image::Image::redownloadAll()
         }
         catch (const fs::filesystem_error &ex)
         {
-            LOG4CXX_WARN(logger, "Error occured while redownloading " << path.filename() << "\n"
+            LOG4CXX_WARN(getLogger(), "Error occured while redownloading " << path.filename() << "\n"
                                                                       << ex.what());
         }
     }
-    LOG4CXX_INFO(logger, "Redownloaded " << count << " images");
+    LOG4CXX_INFO(getLogger(), "Redownloaded " << count << " images");
 }
 
-QPixmap image::Image::getSample()
+[[nodiscard]] QPixmap image::Image::getSample()
 {
     if (!sampleImage)
     {
@@ -102,7 +95,7 @@ QPixmap image::Image::getSample()
         if (created && !fs::exists(fileName))
         {
             std::fstream ostream(fileName, std::ios_base::out | std::ios_base::binary);
-            ostream.write(sampleImage->data(), static_cast<long>(sampleImage->size()));
+            ostream.write(sampleImage->data(), static_cast<int64_t>(sampleImage->size()));
         }
     }
     QPixmap res;
@@ -110,7 +103,7 @@ QPixmap image::Image::getSample()
     return res.isNull() ? res : res.scaled(QSize(1280, 720), Qt::KeepAspectRatio);
 }
 
-std::vector<char> image::Image::getBytes()
+[[nodiscard]] std::vector<char> image::Image::getBytes()
 {
     if (!image)
     {
@@ -129,6 +122,11 @@ bool image::Image::save(const bool &insert)
     std::string ratingString;
     ratingString.push_back(rating);
 
+    if (fileName.length() >= 255){
+        LOG4CXX_WARN(getLogger(), "Skipping file "<< fileName << " with length: " << fileName.length());
+        return false;
+    }
+
     if (!fs::exists(fileName))
     {
         std::fstream ostream(fileName, std::fstream::out | std::fstream::binary);
@@ -136,27 +134,27 @@ bool image::Image::save(const bool &insert)
         try
         {
             ostream.exceptions(std::fstream::failbit | std::fstream::badbit);
-            ostream.write(arr.data(), static_cast<long>(arr.size()));
+            ostream.write(arr.data(), static_cast<int64_t>(arr.size()));
         }
         catch (const std::ios_base::failure &ex)
         {
-            LOG4CXX_ERROR(logger, "Failed to write file: " << fileName << "\n"
+            LOG4CXX_ERROR(getLogger(), "Failed to write file: " << fileName << "\n"
                                                            << ex.what());
             throw;
         }
-        LOG4CXX_INFO(logger, "written \"" << fileName << "\", size: " << ostream.tellp() << " bytes");
-        if (Fraction ratio(width, height); width >= 2560 && (ratio.equals(Fraction(16, 9)) || ratio.equals(Fraction(16, 10))))
+        LOG4CXX_INFO(getLogger(), "written \"" << fileName << "\", size: " << ostream.tellp() << " bytes");
+        if (const Fraction ratio(width, height); width >= 2560 && (ratio.equals(Fraction(16, 9)) || ratio.equals(Fraction(16, 10))))
         {
             const std::string link = getWallpaperBaseDir() + "/Slideshow/" + imageName;
             const std::string linkTarget = ".." + folderName + imageName;
             try
             {
                 fs::create_symlink(linkTarget, link);
-                LOG4CXX_INFO(logger, "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
+                LOG4CXX_INFO(getLogger(), "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
             }
             catch (const fs::filesystem_error &ex)
             {
-                LOG4CXX_ERROR(logger, "Failed to create link:\n" << ex.what());
+                LOG4CXX_ERROR(getLogger(), "Failed to create link:\n" << ex.what());
                 throw;
             }
         }
@@ -169,14 +167,16 @@ bool image::Image::save(const bool &insert)
             try
             {
                 if (!fs::exists(linkDir))
+                {
                     fs::create_directories(linkDir);
+                }
                 const std::string linkTarget = "../.." + folderName + imageName;
                 fs::create_symlink(linkTarget, link);
-                LOG4CXX_INFO(logger, "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
+                LOG4CXX_INFO(getLogger(), "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
             }
             catch (const fs::filesystem_error &ex)
             {
-                LOG4CXX_ERROR(logger, "Failed to create link:\n"
+                LOG4CXX_ERROR(getLogger(), "Failed to create link:\n"
                                           << ex.what());
                 throw;
             }
@@ -204,7 +204,7 @@ void image::Image::addDBEntry(const image_db_s &image)
 
 void image::Image::blacklist()
 {
-    LOG4CXX_INFO(logger, "blacklisted \"" << imageUrl.substr(imageUrl.find_last_of('/') + 1) << "\"");
+    LOG4CXX_INFO(getLogger(), "blacklisted \"" << imageUrl.substr(imageUrl.find_last_of('/') + 1) << "\"");
     const std::unique_lock<std::shared_mutex> lock(readWriteLock);
     getDBInstance().insert(Blacklist{-1, static_cast<int>(imageID), std::to_string(width) + 'x' + std::to_string(height),
                                      Fraction(width, height).toString(), checksum, origin});
@@ -215,18 +215,32 @@ std::string image::Image::getFolderName(const fraction_s &fraction) const
     const Fraction ratio(fraction.width, fraction.height);
     std::string res = "/Anders/";
     if (ratio.equals(Fraction(9, 16)))
+    {
         res = "/9.16/";
+    }
     else if (ratio.equals(Fraction(5, 4)))
+    {
         res = "/5.4/";
+    }
     else if (ratio.equals(Fraction(4, 3)))
+    {
         res = "/4.3/";
+    }
     else if (ratio.equals(Fraction(16, 10)))
+    {
         res = "/16.10/";
+    }
     else if (ratio.equals(Fraction(5, 3)))
+    {
         res = "/5.3/";
+    }
     else if (ratio.equals(Fraction(16, 9)))
+    {
         res = "/16.9/";
+    }
     else if (ratio.equals(Fraction(32, 9)))
+    {
         res = "/32.9/";
+    }
     return res;
 }

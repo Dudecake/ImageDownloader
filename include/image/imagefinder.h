@@ -16,7 +16,11 @@ namespace image
             //bool rebuildChecksums();
             bool rebuildDB();
         private:
-            static log4cxx::LoggerPtr logger;
+            static log4cxx::LoggerPtr &getLogger()
+            {
+                static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("ImageFinder");
+                return logger;
+            }
             std::vector<std::filesystem::directory_iterator> iterators;
     };
 };

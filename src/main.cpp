@@ -1,14 +1,13 @@
+#include "cxxopts/cxxopts.hpp"
 #include "mainwindow.h"
 #include "network/imageworker.h"
-#include "cxxopts/cxxopts.hpp"
-
-#include <log4cxx/logger.h>
 
 #include <log4cxx/basicconfigurator.h>
+#include <log4cxx/helpers/properties.h>
+#include <log4cxx/logger.h>
 #include <log4cxx/mdc.h>
 #include <log4cxx/propertyconfigurator.h>
 #include <log4cxx/xml/domconfigurator.h>
-#include <log4cxx/helpers/properties.h>
 #include <unistd.h>
 
 #include <QApplication>
@@ -72,5 +71,5 @@ int main(int argc, char *argv[])
     MainWindow w(tags);
     w.show();
 
-    return a.exec();
+    return QApplication::exec();
 }

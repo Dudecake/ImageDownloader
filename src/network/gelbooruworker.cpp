@@ -1,12 +1,10 @@
 #include "network/gelbooruworker.h"
 #include "network/downloadhelper.h"
 
-log4cxx::LoggerPtr network::GelbooruWorker::logger = log4cxx::Logger::getLogger("GelbooruWorker");
-
 network::GelbooruWorker::GelbooruWorker(const std::function<void(const image::Image::image_s &)> &callback, const image::Image::Rating &ratingFilter, std::string filter, const std::string &upstreamName)
     : ImageWorker(callback, ratingFilter, upstreamName)
 {
-    std::string ratingString = "";
+    std::string ratingString;
     if (!filter.empty() && !endsWith(filter, "+"))
     {
         filter = filter + '+';
@@ -45,29 +43,37 @@ void network::GelbooruWorker::run()
         const nlohmann::json reply = nlohmann::json::parse(DownloadHelper::download(url));
         if(!reply.is_array())
         {
-            LOG4CXX_WARN(logger, "Reply is not an array, is " << reply.type_name());
+            LOG4CXX_WARN(getLogger(), "Reply is not an array, is " << reply.type_name());
             return;
         }
         int count = 0;
         for (const auto &item : reply)
         {
             if (!running)
+            {
                 break;
+            }
             if (const std::optional<image::Image::image_s> image = image::Image::fromGelbooru(item, upstreamName); image)
             {
                 count++;
                 if (!image::Image::isDownloaded(image::Image::image_download_s{ image->checksum, image->imageID, image->origin }))
                 {
                     if (enqueue(*image))
+                    {
                         std::this_thread::sleep_for(100ms);
+                    }
                     else
+                    {
                         return;
+                    }
                 }
             }
         }
         if (count == 0)
+        {
             break;
+        }
     }
     while (running);
-    LOG4CXX_INFO(logger, "Completed search");
+    LOG4CXX_INFO(getLogger(), "Completed search");
 }

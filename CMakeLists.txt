@@ -56,7 +56,19 @@ if(PROFILE)
     set(PROFILER "profiler")
 endif()
 
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    find_program(CLANG_TIDY_EXE NAMES "clang-tidy" DOC "Path to clang-tidy executable")
+    if(NOT CLANG_TIDY_EXE)
+      message(STATUS "clang-tidy not found.")
+    else()
+      message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+      set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-checks=*,-clang-analyzer-alpha.*,-android-*,-fuchsia-*,-hicpp-use-auto,-modernize-use-auto,-hicpp-vararg,-cppcoreguidelines-pro-type-vararg,-readability-implicit-bool-conversion,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay")
+    endif()
+
+    if(CLANG_TIDY_EXE)
+      set_target_properties(${PROJECT_NAME} PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
+    endif()
+endif()
+
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 target_link_libraries(${PROJECT_NAME} ${PROFILER} ${FILESYSTEM} pthread sqlite3 curl ${LOG4CXX_LIBRARIES} Qt5::Core Qt5::Widgets)
-
-#install(PROGRAMS ImageDownloader.sh DESTINATION bin/ RENAME ImageDownloader)
