@@ -8,13 +8,19 @@
 
 inline bool startsWith(const std::string &value, const std::string &suffix)
 {
-    if (suffix.size() > value.size()) return false;
+    if (suffix.size() > value.size())
+    {
+        return false;
+    }
     return std::equal(suffix.begin(), suffix.end(), value.begin());
 }
 
 inline bool endsWith(const std::string &value, const std::string &suffix)
 {
-    if (suffix.size() > value.size()) return false;
+    if (suffix.size() > value.size())
+    {
+        return false;
+    }
     return std::equal(suffix.rbegin(), suffix.rend(), value.rbegin());
 }
 
@@ -128,7 +134,9 @@ inline std::vector<std::string> split(const std::string &string, const char &sep
     {
         std::string item = string.substr(lastIndex, currentIndex - lastIndex);
         if (!item.empty() || includeEmpty)
+        {
             res.push_back(item);
+        }
         lastIndex = currentIndex + 1;
     }
     res.push_back(string.substr(lastIndex, currentIndex));
@@ -139,13 +147,15 @@ inline std::vector<std::string> split(const std::string &string, const char &sep
 inline std::vector<std::string> split(const std::string &string, const std::string &separator, const bool &includeEmpty = false)
 {
     std::vector<std::string> res;
-    int lastIndex = 0;
-    int currentIndex = 0;
+    size_t lastIndex = 0;
+    size_t currentIndex = 0;
     while ((currentIndex = string.find_first_of(separator, lastIndex)) != std::string::npos)
     {
         std::string item = string.substr(lastIndex, currentIndex - lastIndex);
         if (!item.empty() || includeEmpty)
+        {
             res.push_back(item);
+        }
         lastIndex = currentIndex + 1;
     }
     res.push_back(string.substr(lastIndex, currentIndex));
@@ -158,7 +168,7 @@ inline size_t find_nth_of(const std::string &string, const char &character, cons
     {
         return std::string::npos;
     }
-    int lastIndex = 0;
+    size_t lastIndex = 0;
     size_t currentIndex = 0;
     int count = 0;
     while ((currentIndex = string.find_first_of(character, lastIndex)) != std::string::npos)
@@ -170,7 +180,9 @@ inline size_t find_nth_of(const std::string &string, const char &character, cons
         lastIndex = currentIndex + 1;
     }
     if (count != occurrences)
+    {
         currentIndex = std::string::npos;
+    }
     return currentIndex;
 }
 

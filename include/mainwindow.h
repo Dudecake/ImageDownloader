@@ -3,8 +3,8 @@
 
 #include <QMainWindow>
 #include <memory>
-#include <log4cxx/logger.h>
 
+#include "logger.h"
 #include "image/image.h"
 #include "searchdialog.h"
 
@@ -13,10 +13,6 @@ namespace Ui
 class MainWindow;
 }
 
-namespace image
-{
-    class Image;
-}
 namespace network
 {
     class ImageWorker;
@@ -28,15 +24,18 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    std::deque<image::Image> images;
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
     explicit MainWindow(const std::vector<std::string> &args, QWidget *parent = nullptr);
-    ~MainWindow();
+    MainWindow(const MainWindow &) = delete;
+    MainWindow(const MainWindow &&) = delete;
+    MainWindow operator=(const MainWindow &) = delete;
+    MainWindow operator=(const MainWindow &&) = delete;
+    ~MainWindow() override;
 
     private:
-        static log4cxx::LoggerPtr &getLogger()
+        static auto &getLogger()
         {
-            static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("MainWindow");
+            static auto logger = logger::getSpdLogger("MainWindow");
             return logger;
         }
         int currentIndex;
@@ -46,6 +45,7 @@ public:
         std::unique_ptr<network::ImageWorker> worker;
         std::shared_ptr<network::WorkerFactory> workerFactory;
         std::unique_ptr<Ui::MainWindow> ui;
+        std::deque<image::Image> images;
         void skipSingle();
         void skipMultiple(const int &count = 5);
         void startNewWorker();

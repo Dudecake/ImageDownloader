@@ -44,7 +44,7 @@ void network::KonachanWorker::run()
         const nlohmann::json reply = nlohmann::json::parse(DownloadHelper::download(url));
         if(!reply.is_array())
         {
-            LOG4CXX_WARN(getLogger(), "Reply is not an array, is " << reply.type_name());
+            getLogger()->warn("Reply is not an array, is {}", reply.type_name());
             return;
         }
         int count = 0;
@@ -76,5 +76,5 @@ void network::KonachanWorker::run()
         }
     }
     while (running);
-    LOG4CXX_INFO(getLogger(), "Completed search");
+    getLogger()->info("Completed search");
 }

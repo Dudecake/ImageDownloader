@@ -2,6 +2,7 @@
 
 #include <functional>
 
+int network::DownloadHelper::runningHandles = 0;
 std::mutex network::DownloadHelper::mutex = std::mutex();
 
 std::string network::DownloadHelper::download(const std::string &url)
@@ -17,7 +18,7 @@ std::string network::DownloadHelper::download(const std::string &url)
     curl_easy_setopt(localCurl, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(localCurl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
     if (res = curl_easy_perform(localCurl); res != CURLcode::CURLE_OK) {
-        LOG4CXX_WARN(getLogger(), "Failed to download " << url << ": " << url << "\n" << curl_easy_strerror(res));
+        getLogger()->warn("Failed to download {}:\n{}", url, curl_easy_strerror(res));
     }
     mutex.unlock();
 
@@ -38,7 +39,7 @@ std::vector<char> network::DownloadHelper::downloadImage(const std::string &url,
     curl_easy_setopt(localCurl, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(localCurl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
     if (res = curl_easy_perform(localCurl); res != CURLcode::CURLE_OK) {
-        LOG4CXX_WARN(getLogger(), "Failed to download " << url << ": " << url << "\n" << curl_easy_strerror(res));
+        getLogger()->warn("Failed to download {}:\n{}", url, curl_easy_strerror(res));
     }
     mutex.unlock();
 

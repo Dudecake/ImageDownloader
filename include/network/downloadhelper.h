@@ -6,7 +6,8 @@
 #include <mutex>
 #include <cstdio>
 #include <curl/curl.h>
-#include <log4cxx/logger.h>
+
+#include "logger.h"
 
 namespace network
 {
@@ -25,9 +26,9 @@ namespace network
                 target->insert(target->end(), data, data + (size * nmemb));
                 return size * nmemb;
             }
-            static log4cxx::LoggerPtr& getLogger()
+            static auto &getLogger()
             {
-                static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("DownloadHelper");
+                static auto logger = logger::getSpdLogger("DownloadHelper");
                 return logger;
             }
             static CURL* getCurl()
@@ -35,13 +36,25 @@ namespace network
                 static std::unique_ptr<CURL, void(*)(CURL*)> curl = std::unique_ptr<CURL, void(*)(CURL*)>(curl_easy_init(), &curl_easy_cleanup);
                 return curl.get();
             }
+            static CURLM* getMultiCurl(){
+                static std::unique_ptr<CURLM, CURLMcode(*)(CURLM*)> multiCurl = []{
+                    auto res = std::unique_ptr<CURLM, CURLMcode(*)(CURLM*)>(curl_multi_init(), &curl_multi_cleanup);
+                    curl_multi_perform(res.get(), &runningHandles);
+                    return res;
+                }();
+                return multiCurl.get();
+            }
+            static std::unique_ptr<CURL, void(*)(CURL*)> getMultiHandle(){
+                return std::unique_ptr<CURL, void(*)(CURL*)>(curl_easy_init(), &curl_easy_cleanup);
+            }
         public:
             DownloadHelper() = delete;
+            static int runningHandles;
             static std::string download(const std::string &url);
             static std::vector<char> downloadImage(const std::string &url, const size_t &fileSize = 524288);
             static std::string escape(const std::string &url);
             static std::string unescape(const std::string &url);
     };
-}
+} // namespace network
 
 #endif // DOWNLOADHELPER_H

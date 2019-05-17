@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 #include <filesystem>
-#include <log4cxx/logger.h>
+#include "logger.h"
 
 namespace image
 {
@@ -16,9 +16,9 @@ namespace image
             //bool rebuildChecksums();
             bool rebuildDB();
         private:
-            static log4cxx::LoggerPtr &getLogger()
+            static auto &getLogger()
             {
-                static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("ImageFinder");
+                static auto logger = logger::getSpdLogger("Image");
                 return logger;
             }
             std::vector<std::filesystem::directory_iterator> iterators;

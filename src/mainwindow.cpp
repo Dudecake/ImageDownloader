@@ -43,11 +43,7 @@ MainWindow::MainWindow(const std::vector<std::string> &args, QWidget *parent) :
         dialog.setFilterText(args.front());
         workerFactory->withFilter(args.front());
     }
-    workerFactory->withCallback([&](const image::Image::image_s &image){
-        LOG4CXX_INFO(getLogger(), "found image with a resolution of " << image.width << " x " << image.height <<" \""<< image.imageUrl << "\"");
-        images.emplace_back(image);
-        ui->queueLabel->setText(QString::number(static_cast<int>(images.size())) + " items in queue");
-    });
+    workerFactory->withCallback([&](const image::Image::image_s &image){ addToQueue(image); });
 //    image::Image::redownloadAll();
 //    image::ImageFinder finder(wallpaperBaseDir);
 //    finder.find();
@@ -57,7 +53,7 @@ MainWindow::MainWindow(const std::vector<std::string> &args, QWidget *parent) :
 
 void MainWindow::addToQueue(const image::Image::image_s &image)
 {
-    LOG4CXX_INFO(getLogger(), "Found image with a resolution of " << image.width << " x " << image.height <<" \"" << image.imageUrl << "\"");
+    getLogger()->info("Found image with a resolution of {} x {} \"{}\"", image.width, image.height, image.imageUrl);
     images.emplace_back(image);
     ui->queueLabel->setText(QString::number(static_cast<int>(images.size())) + " items in queue");
 }
@@ -160,7 +156,7 @@ void MainWindow::startNewWorker()
     worker = workerFactory->build();
     if (depth > 0)
     {
-        LOG4CXX_INFO(getLogger(), "Starting new search after reaching a depth of " << depth);
+        getLogger()->info("Starting new search after reaching a depth of {}", depth);
     }
     depth = 0;
     images.clear();

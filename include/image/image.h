@@ -5,10 +5,10 @@
 #include <shared_mutex>
 #include <sqlite_orm/sqlite_orm.h>
 #include <nlohmann/json.hpp>
-#include <log4cxx/logger.h>
 #include <optional>
 
 #include "utils.h"
+#include "logger.h"
 
 #include "image/blacklistimage.h"
 #include "image/wallpaperimage.h"
@@ -180,9 +180,9 @@ namespace image
         };
         static std::string dbName;
         static std::shared_mutex readWriteLock;
-        static log4cxx::LoggerPtr &getLogger()
+        static auto &getLogger()
         {
-            static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("Image");
+            static auto logger = logger::getSpdLogger("Image");
             return logger;
         }
         static bool forbiddenFunc(const char &c) {

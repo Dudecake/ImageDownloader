@@ -44,14 +44,14 @@ void image::ImageFinder::find()
                     }
                     catch (const fs::filesystem_error &ex)
                     {
-                        LOG4CXX_ERROR(getLogger(), "Failed to create link:\n" << ex.what());
+                        getLogger()->error("Failed to create link:\n{}", ex.what());
                         throw;
                     }
                 }
             }
         }
     }
-    LOG4CXX_INFO(getLogger(), "found "<< counter << " images");
+    getLogger()->info("Found {} images", counter);
 }
 
 //bool image::ImageFinder::rebuildChecksums()
@@ -152,11 +152,11 @@ bool image::ImageFinder::rebuildDB()
                         try
                         {
                             fs::create_symlink(linkTarget, link);
-                            LOG4CXX_INFO(getLogger(), "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
+                            getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
                         }
                         catch (const fs::filesystem_error &ex)
                         {
-                            LOG4CXX_ERROR(getLogger(), "Failed to create link:\n" << ex.what());
+                            getLogger()->error("Failed to create link:\n{}", ex.what());
                             throw;
                         }
                     }
@@ -182,11 +182,11 @@ bool image::ImageFinder::rebuildDB()
                             }
                             const std::string linkTarget = "../.." + folderName + imageName;
                             fs::create_symlink(linkTarget, link);
-                            LOG4CXX_INFO(getLogger(), "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
+                            getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
                         }
                         catch (const fs::filesystem_error &ex)
                         {
-                            LOG4CXX_ERROR(getLogger(), "Failed to create link:\n" << ex.what());
+                            getLogger()->error("Failed to create link:\n{}", ex.what());
                             throw;
                         }
                     }
@@ -219,6 +219,6 @@ bool image::ImageFinder::rebuildDB()
             }
         }
     }
-    LOG4CXX_INFO(getLogger(), "found "<< counter << " images");
+    getLogger()->info("Found {} images", counter);
     return true;
 }

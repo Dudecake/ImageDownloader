@@ -79,7 +79,7 @@ void network::DanbooruWorker::run()
         const nlohmann::json reply = nlohmann::json::parse(DownloadHelper::download(url));
         if(!reply.is_array())
         {
-            LOG4CXX_WARN(getLogger(), "Reply is not an array, is " << reply.type_name());
+            getLogger()->warn("Reply is not an array, is {}", reply.type_name());
             return;
         }
         int count = 0;
@@ -173,7 +173,7 @@ void network::DanbooruWorker::run()
         }
         if (count == 0)
         {
-            LOG4CXX_INFO(getLogger(), "Completed search");
+            getLogger()->info("Completed search");
             return;
         }
     }

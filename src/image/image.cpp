@@ -72,11 +72,10 @@ void image::Image::redownloadAll()
         }
         catch (const fs::filesystem_error &ex)
         {
-            LOG4CXX_WARN(getLogger(), "Error occured while redownloading " << path.filename() << "\n"
-                                                                      << ex.what());
+            getLogger()->warn("Error occured while redownloading {}\n{}", path.filename().string(), ex.what());
         }
     }
-    LOG4CXX_INFO(getLogger(), "Redownloaded " << count << " images");
+    getLogger()->info("Redownloaded {} images", count);
 }
 
 [[nodiscard]] QPixmap image::Image::getSample()
@@ -123,7 +122,7 @@ bool image::Image::save(const bool &insert)
     ratingString.push_back(rating);
 
     if (fileName.length() >= 255){
-        LOG4CXX_WARN(getLogger(), "Skipping file "<< fileName << " with length: " << fileName.length());
+        getLogger()->warn("Skipping file {} with length: {}", fileName, fileName.length());
         return false;
     }
 
@@ -138,11 +137,10 @@ bool image::Image::save(const bool &insert)
         }
         catch (const std::ios_base::failure &ex)
         {
-            LOG4CXX_ERROR(getLogger(), "Failed to write file: " << fileName << "\n"
-                                                           << ex.what());
+            getLogger()->error("Failed to write file: {} \n {}", fileName, ex.what());
             throw;
         }
-        LOG4CXX_INFO(getLogger(), "written \"" << fileName << "\", size: " << ostream.tellp() << " bytes");
+        getLogger()->info("written \"{}\", size: {} bytes", fileName, ostream.tellp());
         if (const Fraction ratio(width, height); width >= 2560 && (ratio.equals(Fraction(16, 9)) || ratio.equals(Fraction(16, 10))))
         {
             const std::string link = getWallpaperBaseDir() + "/Slideshow/" + imageName;
@@ -150,11 +148,11 @@ bool image::Image::save(const bool &insert)
             try
             {
                 fs::create_symlink(linkTarget, link);
-                LOG4CXX_INFO(getLogger(), "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
+                getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
             }
             catch (const fs::filesystem_error &ex)
             {
-                LOG4CXX_ERROR(getLogger(), "Failed to create link:\n" << ex.what());
+                getLogger()->error("Failed to create link:\n{}", ex.what());
                 throw;
             }
         }
@@ -172,12 +170,11 @@ bool image::Image::save(const bool &insert)
                 }
                 const std::string linkTarget = "../.." + folderName + imageName;
                 fs::create_symlink(linkTarget, link);
-                LOG4CXX_INFO(getLogger(), "Linked \"" << link << "\" -> \"" << linkTarget << "\"");
+                getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
             }
             catch (const fs::filesystem_error &ex)
             {
-                LOG4CXX_ERROR(getLogger(), "Failed to create link:\n"
-                                          << ex.what());
+                getLogger()->error("Failed to create link:\n{}", ex.what());
                 throw;
             }
         }
@@ -204,7 +201,7 @@ void image::Image::addDBEntry(const image_db_s &image)
 
 void image::Image::blacklist()
 {
-    LOG4CXX_INFO(getLogger(), "blacklisted \"" << imageUrl.substr(imageUrl.find_last_of('/') + 1) << "\"");
+    getLogger()->info("blacklisted \"{}\"", imageUrl.substr(imageUrl.find_last_of('/') + 1));
     const std::unique_lock<std::shared_mutex> lock(readWriteLock);
     getDBInstance().insert(Blacklist{-1, static_cast<int>(imageID), std::to_string(width) + 'x' + std::to_string(height),
                                      Fraction(width, height).toString(), checksum, origin});
