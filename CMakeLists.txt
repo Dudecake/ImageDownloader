@@ -31,11 +31,6 @@ if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     add_compile_options("-ftree-vectorize")
 endif()
 
-#if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-#    set(FILESYSTEM stdc++fs)
-#elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-#    set(FILESYSTEM stdc++fs)
-#endif()
 set(FILESYSTEM stdc++fs)
 
 if (${HUNTER})
