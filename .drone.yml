@@ -7,3 +7,7 @@ steps:
   commands:
   - cmake -DHUNTER=ON .
   - cmake --build .
+
+trigger:
+  branch:
+  - master
