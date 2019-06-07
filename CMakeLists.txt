@@ -6,8 +6,8 @@ option(HUNTER "Use Hunter package manager" OFF)
 if (${HUNTER})
     include("cmake/HunterGate.cmake")
     HunterGate(
-        URL "https://github.com/ruslo/hunter/archive/v0.23.168.tar.gz"
-        SHA1 "27c195b680097a1c4e16688a2f2f4b7e22d3ec36"
+        URL "https://github.com/ruslo/hunter/archive/v0.23.189.tar.gz"
+        SHA1 "7380b4754741ccb60b7229dfeda461c3f68a0ffe"
     )
 endif()
 

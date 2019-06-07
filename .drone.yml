@@ -2,7 +2,7 @@ kind: pipeline
 name: default
 
 steps:
-- name: test
+- name: compile
   image: rikorose/gcc-cmake:gcc-8
   commands:
   - cmake -DHUNTER=ON .
