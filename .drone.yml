@@ -2,12 +2,12 @@ kind: pipeline
 name: default
 
 steps:
-- name: compile
-  image: rikorose/gcc-cmake:gcc-8
-  commands:
-  - cmake -DHUNTER=ON .
-  - cmake --build .
+  - name: compile
+    image: rikorose/gcc-cmake:gcc-8
+    commands:
+      - cmake -DHUNTER=ON .
+      - cmake --build . -- -j
 
 trigger:
   branch:
-  - master
+    - master
