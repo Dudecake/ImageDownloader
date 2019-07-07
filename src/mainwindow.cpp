@@ -80,9 +80,9 @@ void MainWindow::skipSingle()
         worker->wakeAll();
         depth++;
         ui->queueLabel->setText(QString::number(images.size()) + " items in queue");
-        ui->frame->setPixmap(currentImage.getSample());
         ui->nameLabel->setText(QString::fromStdString(currentImage.getName()));
         ui->depthLabel->setText(QString::fromStdString("Depth: " + std::to_string(depth)));
+        ui->frame->setPixmap(currentImage.getSample());
     }
 }
 
@@ -102,34 +102,43 @@ void MainWindow::skipMultiple(const int &count)
     if (!currentImage.nullOrEmpty() && !images.empty())
     {
         ui->queueLabel->setText(QString::number(images.size()) + " items in queue");
-        ui->frame->setPixmap(currentImage.getSample());
         ui->nameLabel->setText(QString::fromStdString(currentImage.getName()));
         ui->depthLabel->setText(QString::fromStdString("Depth: " + std::to_string(depth)));
+        ui->frame->setPixmap(currentImage.getSample());
     }
 }
 
 void MainWindow::startNewWorker()
 {
     static std::function callback = [&](const image::Image::image_s &image){ addToQueue(image); };
+    static int const fullHdWidth = 1920;
+    static int const fullHdHeight = 1080;
+    static int const wuxgaHeight = 1200;
+    static int const qhdWidth = 2560;
+    static int const qhdHeight = 1440;
+    static int const wqxgaHeight = 1600;
+    static int const uhdWidth = 3840;
+    static int const uhdHeight = 2160;
+    static int const wquxgaHeight = 2400;
     switch (currentIndex)
     {
         case 0:
             workerFactory->withWidth(-1);
             break;
         case 1:
-            workerFactory->withWidth(1920)->withHeight(1080)->withMaxHeight(1200)->withTags(std::string());
+            workerFactory->withWidth(fullHdWidth)->withHeight(fullHdHeight)->withMaxHeight(wuxgaHeight)->withTags(std::string());
             break;
         case 2:
-            workerFactory->withWidth(2560)->withHeight(1440)->withMaxHeight(1600)->withTags(std::string());
+            workerFactory->withWidth(qhdWidth)->withHeight(qhdHeight)->withMaxHeight(wqxgaHeight)->withTags(std::string());
             break;
         case 3:
-            workerFactory->withWidth(3840)->withHeight(2160)->withMaxHeight(2400)->withTags(std::string());
+            workerFactory->withWidth(uhdWidth)->withHeight(uhdHeight)->withMaxHeight(wquxgaHeight)->withTags(std::string());
             break;
         case 4:
-            workerFactory->withWidth(1080)->withHeight(1920)->withMaxHeight(-1)->withTags(std::string());
+            workerFactory->withWidth(fullHdHeight)->withHeight(fullHdWidth)->withMaxHeight(-1)->withTags(std::string());
             break;
         case 5:
-            workerFactory->withWidth(1440)->withHeight(2560)->withMaxHeight(-1)->withTags(std::string());
+            workerFactory->withWidth(wqxgaHeight)->withHeight(qhdWidth)->withMaxHeight(-1)->withTags(std::string());
             break;
         case 6:
             workerFactory->withWidth(-1)->withHeight(-1)->withMaxHeight(-1)->withTags("ratio%3A9%3A16+width%3A1080..");
