@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <memory>
+#include <future>
 
 #include "logger.h"
 #include "image/image.h"
@@ -46,6 +47,7 @@ public:
         std::shared_ptr<network::WorkerFactory> workerFactory;
         std::unique_ptr<Ui::MainWindow> ui;
         std::deque<image::Image> images;
+        std::future<void> downloadFuture;
         void skipSingle();
         void skipMultiple(const int &count = 5);
         void startNewWorker();

@@ -13,7 +13,6 @@
 #include "network/workerfactory.h"
 
 #include <deque>
-#include <future>
 
 #include <QComboBox>
 #include <QPlainTextEdit>
@@ -187,22 +186,30 @@ void MainWindow::handleButton()
     {
         if (!currentImage.nullOrEmpty())
         {
-            currentImage.save();
-            depth--;
-            skipSingle();
+            downloadFuture = std::async(std::launch::async, [=]{
+                currentImage.save();
+                depth--;
+                skipSingle();
+            });
         }
     }
     else if (senderName == "nextButton")
     {
-        skipSingle();
+        downloadFuture = std::async(std::launch::async, [=]{
+            skipSingle();
+        });
     }
     else if (senderName == "skipButton")
     {
-        skipMultiple(5);
+        downloadFuture = std::async(std::launch::async, [=]{
+            skipMultiple(5);
+        });
     }
     else if (senderName == "endButton")
     {
-        skipMultiple(static_cast<int>(images.size()) - 1);
+        downloadFuture = std::async(std::launch::async, [=]{
+            skipMultiple(static_cast<int>(images.size()) - 1);
+        });
     }
     else if (senderName == "blackListButton")
     {
@@ -211,7 +218,9 @@ void MainWindow::handleButton()
             currentImage.blacklist();
             depth--;
         }
-        skipSingle();
+        downloadFuture = std::async(std::launch::async, [=]{
+            skipSingle();
+        });
     }
 }
 
