@@ -49,7 +49,7 @@ std::vector<char> network::DownloadHelper::downloadImage(const std::string &url,
 std::string network::DownloadHelper::escape(const std::string &url)
 {
     char *encodedUrl = curl_easy_escape(getCurl(), url.c_str(), static_cast<int>(url.length()));
-    const std::string res = std::string(encodedUrl);
+    std::string res = std::string(encodedUrl);
     curl_free(encodedUrl);
     return res;
 }
@@ -58,7 +58,7 @@ std::string network::DownloadHelper::unescape(const std::string &url)
 {
     int len = 0;
     char *encodedUrl = curl_easy_unescape(getCurl(), url.c_str(), static_cast<int>(url.length()), &len);
-    const std::string res = std::string(encodedUrl, static_cast<size_t>(len));
+    std::string res = std::string(encodedUrl, static_cast<size_t>(len));
     curl_free(encodedUrl);
     return res;
 

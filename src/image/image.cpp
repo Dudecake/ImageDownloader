@@ -1,5 +1,4 @@
 #include "image/image.h"
-#include "image/fraction.h"
 
 #include <filesystem>
 #include <fstream>
@@ -24,7 +23,7 @@ bool image::Image::isDownloaded(const image_download_s &image)
         //contains image
         res = true;
     }
-    if (!res && image.useBlacklist)
+    else if (image.useBlacklist)
     {
         if (auto result = storage.select(count(&Blacklist::imageId), where(eq(&Blacklist::md5, image.md5))); result.front() > 0)
         {
@@ -48,31 +47,27 @@ void image::Image::redownloadAll()
     for (const Wallpaper &wallpaper : storage.iterate<Wallpaper>())
     {
         fs::path path = getWallpaperBaseDir() + '/' + wallpaper.image;
-        try
+        if (!fs::exists(path))
         {
-            if (!fs::exists(path))
+            std::vector<std::string> dimensions = split(wallpaper.dimensions, 'x');
+            std::string imageUrl;
+            if (wallpaper.source == "konachan.com" || wallpaper.source == "yande.re")
             {
-                std::vector<std::string> dimensions = split(wallpaper.dimensions, 'x');
-                std::string imageUrl;
-                if (wallpaper.source == "konachan.com" || wallpaper.source == "yande.re")
-                {
-                    imageUrl = wallpaper.source + "/image/" + wallpaper.md5 + "/" + path.filename().string();
-                }
-                else if (wallpaper.source == "danbooru.donmai.us")
-                {
-                    imageUrl = wallpaper.source + "/data/" + path.filename().string();
-                }
-                else if (wallpaper.source == "gelbooru.com")
-                {
-                    imageUrl = "https://simg3.gelbooru.com/images/" + wallpaper.md5.substr(0, 2) + '/' + wallpaper.md5.substr(2, 4) + '/' + path.filename().string();
-                }
-                Image(image_s{wallpaper.imageId, std::stoi(dimensions[0]), std::stoi(dimensions[1]), wallpaper.rating[0], wallpaper.md5, wallpaper.source, "", imageUrl, wallpaper.imageTags}).save(false);
-                count++;
+                imageUrl = wallpaper.source + "/image/" + wallpaper.md5 + "/" + path.filename().string();
             }
-        }
-        catch (const fs::filesystem_error &ex)
-        {
-            getLogger()->warn("Error occured while redownloading {}\n{}", path.filename().string(), ex.what());
+            else if (wallpaper.source == "danbooru.donmai.us")
+            {
+                imageUrl = wallpaper.source + "/data/" + path.filename().string();
+            }
+            else if (wallpaper.source == "gelbooru.com")
+            {
+                imageUrl = "https://simg3.gelbooru.com/images/" + wallpaper.md5.substr(0, 2) + '/' + wallpaper.md5.substr(2, 4) + '/' + path.filename().string();
+            }
+            if (Image image(Image(image_s{wallpaper.imageId, std::stoi(dimensions[0]), std::stoi(dimensions[1]), wallpaper.rating[0], wallpaper.md5, wallpaper.source, "", imageUrl, wallpaper.imageTags})); !image.save(false)) {
+                getLogger()->warn("Could not redownload image");
+                continue;
+            }
+            count++;
         }
     }
     getLogger()->info("Redownloaded {} images", count);
@@ -114,12 +109,11 @@ void image::Image::redownloadAll()
 bool image::Image::save(const bool &insert)
 {
     namespace fs = std::filesystem;
-    const std::string folderName = getFolderName(fraction_s{width, height});
+    const std::string folderName = getFolderName(Fraction{width, height});
     const std::string imageName = imageUrl.substr(imageUrl.find_last_of('/') + 1);
     const std::string fileName = getWallpaperBaseDir() + folderName + imageName;
 
-    std::string ratingString;
-    ratingString.push_back(rating);
+    std::string ratingString(1, rating);
 
     if (fileName.length() >= 255){
         getLogger()->warn("Skipping file {} with length: {}", fileName, fileName.length());
@@ -130,31 +124,23 @@ bool image::Image::save(const bool &insert)
     {
         std::fstream ostream(fileName, std::fstream::out | std::fstream::binary);
         std::vector<char> arr = getBytes();
-        try
-        {
-            ostream.exceptions(std::fstream::failbit | std::fstream::badbit);
-            ostream.write(arr.data(), static_cast<int64_t>(arr.size()));
-        }
-        catch (const std::ios_base::failure &ex)
-        {
-            getLogger()->error("Failed to write file: {} \n {}", fileName, ex.what());
-            throw;
+        ostream.write(arr.data(), static_cast<int64_t>(arr.size()));
+        if (ostream.fail() || ostream.bad()) {
+            getLogger()->error("Failed to write file: {} \n {}", fileName);
+            return false;
         }
         getLogger()->info("written \"{}\", size: {} bytes", fileName, ostream.tellp());
         if (const Fraction ratio(width, height); width >= 2560 && (ratio.equals(Fraction(16, 9)) || ratio.equals(Fraction(16, 10))))
         {
             const std::string link = getWallpaperBaseDir() + "/Slideshow/" + imageName;
             const std::string linkTarget = ".." + folderName + imageName;
-            try
-            {
-                fs::create_symlink(linkTarget, link);
-                getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
+            std::error_code err;
+            fs::create_symlink(linkTarget, link, err);
+            if (err) {
+                getLogger()->error("Failed to create link:\n{}", err.message());
+                return false;
             }
-            catch (const fs::filesystem_error &ex)
-            {
-                getLogger()->error("Failed to create link:\n{}", ex.what());
-                throw;
-            }
+            getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
         }
     }
     for (std::string tagString : split(imageTags, ' '))
@@ -162,21 +148,22 @@ bool image::Image::save(const bool &insert)
         std::replace(tagString.begin(), tagString.end(), '/', '_');
         if (const std::string linkDir = getWallpaperBaseDir() + "/by-tag/" + tagString, link = linkDir + '/' + imageName; !fs::exists(link))
         {
-            try
+            std::error_code err;
+            if (!fs::exists(linkDir))
             {
-                if (!fs::exists(linkDir))
-                {
-                    fs::create_directories(linkDir);
+                fs::create_directories(linkDir, err);
+                if (err) {
+                    getLogger()->error("Failed to create directory:\n{}", err.message());
+                    return false;
                 }
-                const std::string linkTarget = "../.." + folderName + imageName;
-                fs::create_symlink(linkTarget, link);
-                getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
             }
-            catch (const fs::filesystem_error &ex)
-            {
-                getLogger()->error("Failed to create link:\n{}", ex.what());
-                throw;
+            const std::string linkTarget = "../.." + folderName + imageName;
+            fs::create_symlink(linkTarget, link, err);
+            if (err) {
+                getLogger()->error("Failed to create link:\n{}", err.message());
+                return false;
             }
+            getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
         }
     }
     if (insert)
@@ -191,8 +178,7 @@ bool image::Image::save(const bool &insert)
 
 void image::Image::addDBEntry(const image_db_s &image)
 {
-    std::string ratingString;
-    ratingString.push_back(image.rating);
+    std::string ratingString(1, image.rating);
     const std::unique_lock<std::shared_mutex> lock(readWriteLock);
     getDBInstance().insert(Wallpaper{-1, static_cast<int>(image.imageID), image.imageName,
                                      std::to_string(image.width) + 'x' + std::to_string(image.height), Fraction(image.width, image.height).toString(),
@@ -207,35 +193,34 @@ void image::Image::blacklist()
                                      Fraction(width, height).toString(), checksum, origin});
 }
 
-std::string image::Image::getFolderName(const fraction_s &fraction) const
+std::string image::Image::getFolderName(const Fraction &fraction) const
 {
-    const Fraction ratio(fraction.width, fraction.height);
     std::string res = "/Anders/";
-    if (ratio.equals(Fraction(9, 16)))
+    if (fraction.equals(Fraction(9, 16)))
     {
         res = "/9.16/";
     }
-    else if (ratio.equals(Fraction(5, 4)))
+    else if (fraction.equals(Fraction(5, 4)))
     {
         res = "/5.4/";
     }
-    else if (ratio.equals(Fraction(4, 3)))
+    else if (fraction.equals(Fraction(4, 3)))
     {
         res = "/4.3/";
     }
-    else if (ratio.equals(Fraction(16, 10)))
+    else if (fraction.equals(Fraction(16, 10)))
     {
         res = "/16.10/";
     }
-    else if (ratio.equals(Fraction(5, 3)))
+    else if (fraction.equals(Fraction(5, 3)))
     {
         res = "/5.3/";
     }
-    else if (ratio.equals(Fraction(16, 9)))
+    else if (fraction.equals(Fraction(16, 9)))
     {
         res = "/16.9/";
     }
-    else if (ratio.equals(Fraction(32, 9)))
+    else if (fraction.equals(Fraction(32, 9)))
     {
         res = "/32.9/";
     }

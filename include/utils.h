@@ -135,11 +135,11 @@ inline std::vector<std::string> split(const std::string &string, const char &sep
         std::string item = string.substr(lastIndex, currentIndex - lastIndex);
         if (!item.empty() || includeEmpty)
         {
-            res.push_back(item);
+            res.emplace_back(item);
         }
         lastIndex = currentIndex + 1;
     }
-    res.push_back(string.substr(lastIndex, currentIndex));
+    res.emplace_back(string.substr(lastIndex, currentIndex));
     return res;
 }
 
@@ -154,11 +154,11 @@ inline std::vector<std::string> split(const std::string &string, const std::stri
         std::string item = string.substr(lastIndex, currentIndex - lastIndex);
         if (!item.empty() || includeEmpty)
         {
-            res.push_back(item);
+            res.emplace_back(item);
         }
         lastIndex = currentIndex + 1;
     }
-    res.push_back(string.substr(lastIndex, currentIndex));
+    res.emplace_back(string.substr(lastIndex, currentIndex));
     return res;
 }
 

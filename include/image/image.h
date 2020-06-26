@@ -11,6 +11,7 @@
 #include "logger.h"
 
 #include "image/blacklistimage.h"
+#include "image/fraction.h"
 #include "image/wallpaperimage.h"
 #include "network/downloadhelper.h"
 
@@ -55,7 +56,7 @@ namespace image
         static void initializeDB(const std::string &dbName) { Image::dbName = dbName; }
         static std::optional<image_s> fromKonachan(const nlohmann::json &image, const std::string &upstreamName = "konachan.com")
         {
-            std::optional<Image::image_s> res = std::nullopt;
+            std::optional<Image::image_s> res;
             if (const int imageID = image["id"]; imageID != -1) {
                 const std::string checksum = image["md5"];
                 const std::string sampleUrl = network::DownloadHelper::unescape(image["sample_url"]);
@@ -72,7 +73,7 @@ namespace image
         }
         static std::optional<image_s> fromGelbooru(const nlohmann::json &image, const std::string &upstreamName = "gelbooru.com")
         {
-            std::optional<Image::image_s> res = std::nullopt;
+            std::optional<Image::image_s> res;
             if (const int imageID = image["id"]; imageID != -1) {
                 const std::string checksum = image["hash"];
                 const std::string sampleUrl = network::DownloadHelper::unescape(image["file_url"]);
@@ -88,7 +89,7 @@ namespace image
         }
         static std::optional<image_s> fromDanbooru(const nlohmann::json &image, const std::string &upstreamName = "danbooru.donmai.us")
         {
-            std::optional<Image::image_s> res = std::nullopt;
+            std::optional<Image::image_s> res;
             if (const int imageID = image["id"]; imageID != -1 && image.find("md5") != image.end()) {
                 const std::string checksum = image["md5"];
                 const std::string sampleUrl = image["large_file_url"];
@@ -132,8 +133,7 @@ namespace image
             using sqlite_orm::make_column;
             using sqlite_orm::primary_key;
             using sqlite_orm::unique;
-            static auto storage = [&dbName = dbName]{
-                auto res = make_storage(dbName,
+            static auto storage = make_storage(dbName,
                                              make_table("blacklist",
                                                              make_column("id", &Blacklist::id, primary_key()),
                                                              make_column("imageid", &Blacklist::imageId),
@@ -151,15 +151,13 @@ namespace image
                                                              make_column("imagetags", &Wallpaper::imageTags),
                                                              make_column("md5", &Wallpaper::md5, unique()),
                                                              make_column("source", &Wallpaper::source)));
-                return res;
-            }();
             return storage;
         }
         static void addDBEntry(const image_db_s &image);
         static bool isDownloaded(const image_download_s &image);
         static void redownloadAll();
-        Image(): sampleImage(std::nullopt), image(std::nullopt), height(-1), fileSize(-1), sampleFileSize(-1) { }
-        explicit Image(const image_s &image): sampleImage(std::nullopt), image(std::nullopt), imageID(image.imageID), checksum(image.checksum), origin(image.origin), sampleUrl(image.sampleUrl), imageUrl(image.imageUrl), imageTags(image.imageTags), width(image.width), height(image.height), rating(image.rating), fileSize(image.fileSize), sampleFileSize(image.sampleFileSize) { }
+        Image() { }
+        explicit Image(const image_s &image): imageID(image.imageID), checksum(image.checksum), origin(image.origin), sampleUrl(image.sampleUrl), imageUrl(image.imageUrl), imageTags(image.imageTags), width(image.width), height(image.height), rating(image.rating), fileSize(image.fileSize), sampleFileSize(image.sampleFileSize) { }
         [[nodiscard]] QPixmap getSample();
         [[nodiscard]] std::vector<char> getBytes();
         std::string getName() const { return imageUrl.substr(imageUrl.find_last_of('/')+1); }
@@ -173,11 +171,6 @@ namespace image
         void blacklist();
         bool save(const bool &insert = true);
     private:
-        struct fraction_s
-        {
-            int width = -1;
-            int height = -1;
-        };
         static std::string dbName;
         static std::shared_mutex readWriteLock;
         static auto &getLogger()
@@ -191,18 +184,18 @@ namespace image
         }
         std::optional<std::vector<char>> sampleImage;
         std::optional<std::vector<char>> image;
-        int64_t imageID{};
+        int64_t imageID{-1};
         std::string checksum;
         std::string origin;
         std::string sampleUrl;
         std::string imageUrl;
         std::string imageTags;
-        int width{};
-        int height{};
-        char rating{};
-        size_t fileSize{};
-        size_t sampleFileSize{};
-        std::string getFolderName(const fraction_s &) const;
+        int width{-1};
+        int height{-1};
+        char rating{'s'};
+        size_t fileSize{0L};
+        size_t sampleFileSize{0L};
+        std::string getFolderName(const Fraction &) const;
     };
 };  // namespace image
 

@@ -38,14 +38,10 @@ void image::ImageFinder::find()
                     std::string imageName = item.path().filename();
                     std::string link = getWallpaperBaseDir() + "/Slideshow/" + imageName;
                     std::string linkTarget = "../" + folderName + imageName;
-                    try
-                    {
-                        fs::create_symlink(linkTarget, link);
-                    }
-                    catch (const fs::filesystem_error &ex)
-                    {
-                        getLogger()->error("Failed to create link:\n{}", ex.what());
-                        throw;
+                    std::error_code err;
+                    fs::create_symlink(linkTarget, link, err);
+                    if (err) {
+                        getLogger()->error("Failed to create link:\n{}", err.message());
                     }
                 }
             }
@@ -149,21 +145,18 @@ bool image::ImageFinder::rebuildDB()
                     if (!fs::exists(link))
                     {
                         std::string linkTarget = "../" + folderName + imageName;
-                        try
-                        {
-                            fs::create_symlink(linkTarget, link);
-                            getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
+                        std::error_code err;
+                        fs::create_symlink(linkTarget, link, err);
+                        if (err) {
+                            getLogger()->error("Failed to create link:\n{}", err.message());
+                            continue;
                         }
-                        catch (const fs::filesystem_error &ex)
-                        {
-                            getLogger()->error("Failed to create link:\n{}", ex.what());
-                            throw;
-                        }
+                        getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
                     }
                 }
             }
             std::optional<image::Image::image_s> image;
-            if (startsWith(imageName,"Konachan"))
+            if (startsWith(imageName, "Konachan"))
             {
                 const int imageID = std::stoi(split(imageName, ' ').at(2));
                 url = "https://konachan.com/post.xml?limit=1&tags=id%3A" + std::to_string(imageID);
@@ -174,21 +167,22 @@ bool image::ImageFinder::rebuildDB()
                     std::replace(tag.begin(), tag.end(), '/', '_');
                     if (const std::string linkDir = getWallpaperBaseDir() + "/by-tag/" + tag + '/', link = linkDir + '/' + imageName; !fs::exists(link))
                     {
-                        try
+                        std::error_code err;
+                        if (!fs::exists(linkDir, err))
                         {
-                            if (!fs::exists(linkDir))
-                            {
-                                fs::create_directories(linkDir);
+                            fs::create_directories(linkDir, err);
+                            if (err) {
+                                getLogger()->error("Failed to create directory:\n{}", err.message());
+                                continue;
                             }
-                            const std::string linkTarget = "../.." + folderName + imageName;
-                            fs::create_symlink(linkTarget, link);
-                            getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
                         }
-                        catch (const fs::filesystem_error &ex)
-                        {
-                            getLogger()->error("Failed to create link:\n{}", ex.what());
-                            throw;
+                        const std::string linkTarget = "../.." + folderName + imageName;
+                        fs::create_symlink(linkTarget, link, err);
+                        if (err) {
+                            getLogger()->error("Failed to create link:\n{}", err.message());
+                            continue;
                         }
+                        getLogger()->info("Linked \"{}\" -> \"{}\"", link, linkTarget);
                     }
                 }
             }

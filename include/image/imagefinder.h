@@ -11,14 +11,14 @@ namespace image
     class ImageFinder
     {
         public:
-            explicit ImageFinder(const std::string &dir);
+            ImageFinder(const std::string &dir);
             void find();
             //bool rebuildChecksums();
             bool rebuildDB();
         private:
             static auto &getLogger()
             {
-                static auto logger = logger::getSpdLogger("Image");
+                static auto logger = logger::getSpdLogger("ImageFinder");
                 return logger;
             }
             std::vector<std::filesystem::directory_iterator> iterators;
