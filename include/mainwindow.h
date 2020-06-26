@@ -48,6 +48,7 @@ public:
         std::unique_ptr<Ui::MainWindow> ui;
         std::deque<image::Image> images;
         std::future<void> downloadFuture;
+        std::function<void(const image::Image::image_s &)> const callback;
         void skipSingle();
         void skipMultiple(const int &count = 5);
         void startNewWorker();

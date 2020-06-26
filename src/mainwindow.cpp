@@ -20,8 +20,11 @@
 #include <QSettings>
 #include <QString>
 
+constexpr int queueLength = 51;
+constexpr int defaultSkipAmount = 5;
+
 MainWindow::MainWindow(const std::vector<std::string> &args, QWidget *parent) :
-    QMainWindow(parent), depth(0), images(51), workerFactory(network::WorkerFactory::getInstance()), ui(std::make_unique<Ui::MainWindow>())
+    QMainWindow(parent), depth(0), workerFactory(network::WorkerFactory::getInstance()), ui(std::make_unique<Ui::MainWindow>()), images(queueLength), callback([&](const image::Image::image_s &image){ addToQueue(image); })
 {
     QSettings settings;
     restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
@@ -42,7 +45,7 @@ MainWindow::MainWindow(const std::vector<std::string> &args, QWidget *parent) :
         dialog.setFilterText(args.front());
         workerFactory->withFilter(args.front());
     }
-    workerFactory->withCallback([&](const image::Image::image_s &image){ addToQueue(image); });
+    workerFactory->withCallback(callback);
 //    image::Image::redownloadAll();
 //    image::ImageFinder finder(wallpaperBaseDir);
 //    finder.find();
@@ -63,7 +66,7 @@ void MainWindow::setSearchOptions()
     if (senderObj->inherits("SearchDialog"))
     {
         SearchDialog *search = qobject_cast<SearchDialog*>(senderObj);
-        SearchDialog::SearchOptions options = search->getOptions();
+        SearchOptions options = search->getOptions();
         workerFactory->withRatingFilter(options.getRating())->withWorkerType(options.getWorker())->withFilter(options.getTags());
         startNewWorker();
     }
@@ -87,42 +90,45 @@ void MainWindow::skipSingle()
 
 void MainWindow::skipMultiple(const int &count)
 {
+    int skipped = 0;
     for (int i = 0; i < count; i++)
     {
         if (!images.empty())
         {
             currentImage = images.front();
             images.pop_front();
-            worker->skip(1);
-            worker->wakeAll();
-            depth++;
+            skipped++;
         }
     }
-    if (!currentImage.nullOrEmpty() && !images.empty())
-    {
-        ui->queueLabel->setText(QString::number(images.size()) + " items in queue");
-        ui->nameLabel->setText(QString::fromStdString(currentImage.getName()));
-        ui->depthLabel->setText(QString::fromStdString("Depth: " + std::to_string(depth)));
-        ui->frame->setPixmap(currentImage.getSample());
+    if (skipped != 0) {
+        worker->skip(skipped);
+        worker->wakeAll();
+        depth+=skipped;
+        if (!currentImage.nullOrEmpty() && !images.empty())
+        {
+            ui->queueLabel->setText(QString::number(images.size()) + " items in queue");
+            ui->nameLabel->setText(QString::fromStdString(currentImage.getName()));
+            ui->depthLabel->setText(QString::fromStdString("Depth: " + std::to_string(depth)));
+            ui->frame->setPixmap(currentImage.getSample());
+        }
     }
 }
 
 void MainWindow::startNewWorker()
 {
-    static std::function callback = [&](const image::Image::image_s &image){ addToQueue(image); };
-    static int const fullHdWidth = 1920;
-    static int const fullHdHeight = 1080;
-    static int const wuxgaHeight = 1200;
-    static int const qhdWidth = 2560;
-    static int const qhdHeight = 1440;
-    static int const wqxgaHeight = 1600;
-    static int const uhdWidth = 3840;
-    static int const uhdHeight = 2160;
-    static int const wquxgaHeight = 2400;
+    constexpr int fullHdWidth = 1920;
+    constexpr int fullHdHeight = 1080;
+    constexpr int wuxgaHeight = 1200;
+    constexpr int qhdWidth = 2560;
+    constexpr int qhdHeight = 1440;
+    constexpr int wqxgaHeight = 1600;
+    constexpr int uhdWidth = 3840;
+    constexpr int uhdHeight = 2160;
+    constexpr int wquxgaHeight = 2400;
     switch (currentIndex)
     {
         case 0:
-            workerFactory->withWidth(-1);
+            workerFactory->withWidth(-1)->withHeight(-1)->withMaxHeight(-1)->withTags(std::string());
             break;
         case 1:
             workerFactory->withWidth(fullHdWidth)->withHeight(fullHdHeight)->withMaxHeight(wuxgaHeight)->withTags(std::string());
@@ -186,7 +192,7 @@ void MainWindow::handleButton()
     {
         if (!currentImage.nullOrEmpty())
         {
-            downloadFuture = std::async(std::launch::async, [=]{
+            downloadFuture = std::async(std::launch::async, [=] {
                 currentImage.save();
                 depth--;
                 skipSingle();
@@ -195,19 +201,19 @@ void MainWindow::handleButton()
     }
     else if (senderName == "nextButton")
     {
-        downloadFuture = std::async(std::launch::async, [=]{
+        downloadFuture = std::async(std::launch::async, [=] {
             skipSingle();
         });
     }
     else if (senderName == "skipButton")
     {
-        downloadFuture = std::async(std::launch::async, [=]{
-            skipMultiple(5);
+        downloadFuture = std::async(std::launch::async, [=] {
+            skipMultiple(defaultSkipAmount);
         });
     }
     else if (senderName == "endButton")
     {
-        downloadFuture = std::async(std::launch::async, [=]{
+        downloadFuture = std::async(std::launch::async, [=] {
             skipMultiple(static_cast<int>(images.size()) - 1);
         });
     }
@@ -218,7 +224,7 @@ void MainWindow::handleButton()
             currentImage.blacklist();
             depth--;
         }
-        downloadFuture = std::async(std::launch::async, [=]{
+        downloadFuture = std::async(std::launch::async, [=] {
             skipSingle();
         });
     }

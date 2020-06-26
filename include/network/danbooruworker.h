@@ -20,10 +20,11 @@ namespace network
                 return logger;
             }
             std::string filter;
-            int minWidth;
-            int minHeight;
-            int maxHeight;
+            int poolNumber{-1};
+            int minWidth{-1};
+            int minHeight{-1};
+            int maxHeight{-1};
     };
-};
+}; // namespace network
 
 #endif // DANBOORUWORKER_H

@@ -30,7 +30,6 @@ network::KonachanWorker::KonachanWorker(const std::function<void(const image::Im
             break;
     }
     this->tags = ratingString + (filter.empty() ? "" : '+' + filter);
-    this->tags = ratingString + (filter.empty() ? "" : '+' + filter);
     this->worker = std::thread(std::function<void()>([&](){ KonachanWorker::run(); }));
 }
 

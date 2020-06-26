@@ -2,10 +2,7 @@
 #include "network/downloadhelper.h"
 
 network::DanbooruWorker::DanbooruWorker(const std::function<void(const image::Image::image_s &)> &callback, const image::Image::Rating &ratingFilter, const std::string &filter, const std::string &tags, const std::string &upstreamName)
-    : ImageWorker(callback, ratingFilter, upstreamName),
-      minWidth(-1),
-      minHeight(-1),
-      maxHeight(-1)
+    : ImageWorker(callback, ratingFilter, upstreamName)
 {
     const std::string fullTags = (filter.empty() ? "" : filter + '+') + tags;
     if (!fullTags.empty())
