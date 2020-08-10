@@ -18,7 +18,7 @@ bool image::Image::isDownloaded(const image_download_s &image)
         //contains image
         res = true;
     }
-    else if (auto result = storage.select(count(&Wallpaper::imageId), where(eq(&Wallpaper::imageId, image.imageID) and eq(&Wallpaper::source, image.source))); result.front() > 0)
+    else if (auto result = storage.select(count(&Wallpaper::imageId), where(eq(&Wallpaper::imageId, image.imageId) and eq(&Wallpaper::source, image.source))); result.front() > 0)
     {
         //contains image
         res = true;
@@ -30,7 +30,7 @@ bool image::Image::isDownloaded(const image_download_s &image)
             //contains image
             res = true;
         }
-        else if (auto result = storage.select(count(&Blacklist::imageId), where(eq(&Blacklist::imageId, image.imageID) and eq(&Blacklist::source, image.source))); result.front() > 0)
+        else if (auto result = storage.select(count(&Blacklist::imageId), where(eq(&Blacklist::imageId, image.imageId) and eq(&Blacklist::source, image.source))); result.front() > 0)
         {
             //contains image
             res = true;
@@ -169,7 +169,7 @@ bool image::Image::save(const bool &insert)
     if (insert)
     {
         const std::unique_lock<std::shared_mutex> lock(readWriteLock);
-        getDBInstance().insert(Wallpaper{-1, static_cast<int>(imageID), (folderName.substr(1) + imageName),
+        getDBInstance().insert(Wallpaper{-1, static_cast<int>(imageId), (folderName.substr(1) + imageName),
                                          std::to_string(width) + 'x' + std::to_string(height), Fraction(width, height).toString(),
                                          ratingString, imageTags, checksum, origin});
     }
@@ -180,7 +180,7 @@ void image::Image::addDBEntry(const image_db_s &image)
 {
     std::string ratingString(1, image.rating);
     const std::unique_lock<std::shared_mutex> lock(readWriteLock);
-    getDBInstance().insert(Wallpaper{-1, static_cast<int>(image.imageID), image.imageName,
+    getDBInstance().insert(Wallpaper{-1, static_cast<int>(image.imageId), image.imageName,
                                      std::to_string(image.width) + 'x' + std::to_string(image.height), Fraction(image.width, image.height).toString(),
                                      ratingString, image.imageTags, image.checksum, image.origin});
 }
@@ -189,7 +189,7 @@ void image::Image::blacklist()
 {
     getLogger()->info("blacklisted \"{}\"", imageUrl.substr(imageUrl.find_last_of('/') + 1));
     const std::unique_lock<std::shared_mutex> lock(readWriteLock);
-    getDBInstance().insert(Blacklist{-1, static_cast<int>(imageID), std::to_string(width) + 'x' + std::to_string(height),
+    getDBInstance().insert(Blacklist{-1, static_cast<int>(imageId), std::to_string(width) + 'x' + std::to_string(height),
                                      Fraction(width, height).toString(), checksum, origin});
 }
 

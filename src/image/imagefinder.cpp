@@ -69,13 +69,13 @@ void image::ImageFinder::find()
 //        query.prepare("SELECT id FROM " + table);
 //        if (query.exec())
 //        {
-//            int imageID;
+//            int imageId;
 //            QChar rating;
 //            while (query.next())
 //            {
 //                counter++;
-//                imageID = query.value("id").toInt();
-//                url = QUrl(QStringLiteral("https://konachan.com/post.xml?limit=1&tags=id%3A") + QString::number(imageID));
+//                imageId = query.value("id").toInt();
+//                url = QUrl(QStringLiteral("https://konachan.com/post.xml?limit=1&tags=id%3A") + QString::number(imageId));
 //                request = QNetworkRequest(url);
 //                reply = manager.get(request);
 //                QObject::disconnect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
@@ -94,21 +94,21 @@ void image::ImageFinder::find()
 //                        {
 ////                            QSqlQuery deleteQuery;
 ////                            deleteQuery.prepare("DELETE from blacklist WHERE id=(:id)");
-////                            deleteQuery.bindValue(":id", imageID);
+////                            deleteQuery.bindValue(":id", imageId);
 ////                            if (!deleteQuery.exec())
 ////                            {
 ////                                qWarning() << "Failed to exec query" << query.lastError();
 ////                            }
 ////                            else
 ////                            {
-////                                printf("Deleted %d", std::to_string(imageID));
+////                                printf("Deleted %d", std::to_string(imageId));
 ////                            }
 //                            continue;
 //                        }
 ////                        QSqlQuery updateQuery;
 ////                        updateQuery.prepare("UPDATE " + table + " set md5=(:md5) WHERE id=(:id)");
 ////                        updateQuery.bindValue(":md5", md5);
-////                        updateQuery.bindValue(":id", imageID);
+////                        updateQuery.bindValue(":id", imageId);
 ////                        if (!updateQuery.exec())
 ////                        {
 ////                            qWarning() << "Failed to exec query" << query.lastError();
@@ -127,6 +127,7 @@ bool image::ImageFinder::rebuildDB()
     namespace fs = std::filesystem;
     std::string url;
     int counter = 0;
+    simdjson::dom::parser parser;
     for (fs::directory_iterator &it : iterators)
     {
         for (const fs::directory_entry &item : it)
@@ -158,9 +159,9 @@ bool image::ImageFinder::rebuildDB()
             std::optional<image::Image::image_s> image;
             if (startsWith(imageName, "Konachan"))
             {
-                const int imageID = std::stoi(split(imageName, ' ').at(2));
-                url = "https://konachan.com/post.xml?limit=1&tags=id%3A" + std::to_string(imageID);
-                const nlohmann::json response = nlohmann::json::parse(network::DownloadHelper::download(url));
+                const int imageId = std::stoi(split(imageName, ' ').at(2));
+                url = "https://konachan.com/post.xml?limit=1&tags=id%3A" + std::to_string(imageId);
+                const simdjson::dom::element response = parser.parse(network::DownloadHelper::download(url));
                 image = image::Image::fromKonachan(response[0]);
                 for (std::string tag : split(image->imageTags, ' '))
                 {
@@ -195,7 +196,7 @@ bool image::ImageFinder::rebuildDB()
                     // is danbooru image
                     std::string md5 = imageName.substr(imageName.length() - 36, 32);
                     url = "https://danbooru.donmai.us/posts.xml?limit=1&tags=md5%3A" + md5;
-                    const nlohmann::json response = nlohmann::json::parse(network::DownloadHelper::download(url));
+                    const simdjson::dom::element response = parser.parse(network::DownloadHelper::download(url));
                     image = image::Image::fromDanbooru(response[0]);
                 }
                 else
@@ -203,9 +204,9 @@ bool image::ImageFinder::rebuildDB()
                     continue;
                 }
             }
-            if (!Image::isDownloaded(Image::image_download_s{ image->checksum, image->imageID, startsWith(imageName, "Konachan") ? "konachan.com" : "danbooru.donmai.us", false }))
+            if (!Image::isDownloaded(Image::image_download_s{ image->checksum, image->imageId, startsWith(imageName, "Konachan") ? "konachan.com" : "danbooru.donmai.us", false }))
             {
-                Image::addDBEntry(Image::image_db_s{ image->imageID, folderName + imageName, width, height, image->rating, image->imageTags, image->checksum, startsWith(imageName, "Konachan") ? "konachan.com" : "danbooru.donmai.us" });
+                Image::addDBEntry(Image::image_db_s{ image->imageId, folderName + imageName, width, height, image->rating, image->imageTags, image->checksum, startsWith(imageName, "Konachan") ? "konachan.com" : "danbooru.donmai.us" });
             }
             else
             {

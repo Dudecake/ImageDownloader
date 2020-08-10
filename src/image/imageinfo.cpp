@@ -4,9 +4,12 @@ void image::ImageInfo::processStream(std::fstream &fstream)
 {
     char buf[2];
     memset(&buf, 0 , sizeof buf);
-    int c1; fstream.read(buf, 1); c1 = static_cast<unsigned char>(buf[0]);
-    int c2; fstream.read(buf, 1); c2 = static_cast<unsigned char>(buf[0]);
-    int c3; fstream.read(buf, 1); c3 = static_cast<unsigned char>(buf[0]);
+    fstream.read(buf, 1);
+    int c1 = static_cast<unsigned char>(buf[0]);
+    fstream.read(buf, 1);
+    int c2 = static_cast<unsigned char>(buf[0]);
+    fstream.read(buf, 1);
+    int c3 = static_cast<unsigned char>(buf[0]);
 
     mimeType = "";
     width = height = -1;
@@ -23,7 +26,7 @@ void image::ImageInfo::processStream(std::fstream &fstream)
         while (c3 == 255)
         {
             fstream.read(buf, 1);
-            int marker; marker = static_cast<unsigned char>(buf[0]);
+            int marker = static_cast<unsigned char>(buf[0]);
             int len = readInt(fstream, 2, true);
             if (marker == 192 || marker == 193 || marker == 194)
             {
@@ -62,10 +65,9 @@ void image::ImageInfo::processStream(std::fstream &fstream)
         { // TIFF
             bool bigEndian = c1 == 'M';
             int ifd = 0;
-            int entries;
             ifd = readInt(fstream, 4, bigEndian);
             fstream.seekg(ifd - 8, std::fstream::cur);
-            entries = readInt(fstream, 2, bigEndian);
+            int entries = readInt(fstream, 2, bigEndian);
             for (int i = 1; i <= entries; i++)
             {
                 int tag = readInt(fstream, 2, bigEndian);
@@ -106,15 +108,14 @@ void image::ImageInfo::processStream(std::fstream &fstream)
 int image::ImageInfo::readInt(std::fstream &fstream, const int &noOfBytes, const bool &bigEndian)
 {
     int ret = 0;
-    int sv = bigEndian ? ((noOfBytes - 1) * 8) : 0;
-    int cnt = bigEndian ? -8 : 8;
+    unsigned int sv = bigEndian ? ((noOfBytes - 1) * 8) : 0;
+    unsigned int cnt = bigEndian ? -8 : 8;
     char buf[2];
     for (int i = 0; i < noOfBytes; i++)
     {
         memset(&buf, 0, sizeof buf);
-        int temp;
         fstream.read(buf, 1);
-        temp = static_cast<unsigned char>(buf[0]);
+        unsigned int temp = static_cast<unsigned char>(buf[0]);
         ret |= (temp << sv);
         sv += cnt;
     }

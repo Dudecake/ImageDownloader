@@ -15,7 +15,7 @@ namespace network
     class ImageWorker
     {
         protected:
-            ImageWorker(const std::function<void(const image::Image::image_s &)> &callback, const image::Image::Rating &ratingFilter, const std::string &upstreamName): ratingFilter(ratingFilter), upstreamName(upstreamName), callback(callback), running(true) { }
+            ImageWorker(const std::function<void(const image::Image::image_s &)> &callback, const image::Image::Rating &ratingFilter, const std::string &upstreamName): upstreamName(upstreamName), callback(callback), ratingFilter(ratingFilter), running(true) { }
             const std::string upstreamName;
             const std::function<void(const image::Image::image_s &)> &callback;
             std::mutex mutex;

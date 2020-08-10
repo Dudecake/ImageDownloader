@@ -6,8 +6,8 @@ option(HUNTER "Use Hunter package manager" OFF)
 if (${HUNTER})
     include("cmake/HunterGate.cmake")
     HunterGate(
-        URL "https://github.com/ruslo/hunter/archive/v0.23.214.tar.gz"
-        SHA1 "e14bc153a7f16d6a5eeec845fb0283c8fad8c358"
+        URL "https://github.com/cpp-pm/hunter/archive/v0.23.263.tar.gz"
+        SHA1 "9b96c376bf3526163e81b7adb8db5a0ea8c7e1bf"
     )
 endif()
 
@@ -47,11 +47,11 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(SRC "src/main.cpp" "src/mainwindow.cpp" "src/searchdialog.cpp"
         "src/image/image.cpp" "src/image/imagefinder.cpp" "src/image/imageinfo.cpp"
         "src/network/downloadhelper.cpp" "src/network/danbooruworker.cpp" "src/network/konachanworker.cpp"
-        "src/network/gelbooruworker.cpp")
+        "src/network/gelbooruworker.cpp" "src/simdjson/simdjson.cpp")
 set(HEADERS "include/utils.h" "include/logger.h" "include/mainwindow.h" "include/searchdialog.h"
             "include/image/fraction.h" "include/image/image.h" "include/image/imagefinder.h" "include/image/imageinfo.h" "include/image/blacklistimage.h" "include/image/wallpaperimage.h"
             "include/network/downloadhelper.h" "include/network/workerfactory.h" "include/network/imageworker.h" "include/network/danbooruworker.h" "include/network/konachanworker.h" "include/network/gelbooruworker.h"
-            "include/nlohmann/json.hpp" "include/cxxopts/cxxopts.hpp")
+            "include/cxxopts/cxxopts.hpp" "include/simdjson/simdjson.h")
 
 set(FORMS "src/mainwindow.ui" "src/searchdialog.ui")
 set(RESOURCES "resources/imagedownloader.qrc")

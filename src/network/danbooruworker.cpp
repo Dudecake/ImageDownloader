@@ -70,17 +70,18 @@ void network::DanbooruWorker::run()
 {
     using namespace std::chrono_literals;
     int page = 1;
+    simdjson::dom::parser parser;
     do
     {
         const std::string url = "https://" + upstreamName + "/posts.json?limit=50&page=" + std::to_string(page++) + "&tags=" + tags;
-        const nlohmann::json reply = nlohmann::json::parse(DownloadHelper::download(url));
+        const simdjson::dom::element reply = parser.parse(DownloadHelper::download(url));
         if(!reply.is_array())
         {
-            getLogger()->warn("Reply is not an array, is {}", reply.type_name());
+            getLogger()->warn("Reply is not an array, is {}", reply.type());
             return;
         }
         int count = 0;
-        for (const auto &item : reply)
+        for (const auto &item : reply.get_array())
         {
             if (!running)
             {
@@ -89,7 +90,7 @@ void network::DanbooruWorker::run()
             count++;
             if (const std::optional<image::Image::image_s> image = image::Image::fromDanbooru(item); image)
             {
-                const QChar rating = image->rating;
+                const char rating = image->rating;
                 if (rating == 's' && !(ratingFilter & image::Image::Rating::Safe))
                 {
                     continue;
@@ -154,7 +155,7 @@ void network::DanbooruWorker::run()
                         continue;
                     }
                 }
-                if (image::Image::isDownloaded(image::Image::image_download_s{ image->checksum, image->imageID, image->origin }))
+                if (image::Image::isDownloaded(image::Image::image_download_s{ image->checksum, image->imageId, image->origin }))
                 {
                     continue;
                 }
