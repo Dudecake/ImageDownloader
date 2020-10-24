@@ -1,6 +1,6 @@
 /* auto-generated on Fri 23 Oct 2020 09:30:48 EDT. Do not edit! */
 /* begin file src/simdjson.cpp */
-#include "simdjson.h"
+#include "simdjson/simdjson.h"
 
 SIMDJSON_PUSH_DISABLE_WARNINGS
 SIMDJSON_DISABLE_UNDESIRED_WARNINGS
