@@ -3,9 +3,6 @@
 #include "network/imageworker.h"
 
 #include <memory>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_sinks.h>
 #include <unistd.h>
 
 #include <QApplication>

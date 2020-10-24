@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.11)
 
 option(PROFILE "Profile using gperf" OFF)
 option(HUNTER "Use Hunter package manager" OFF)
@@ -6,8 +6,8 @@ option(HUNTER "Use Hunter package manager" OFF)
 if (${HUNTER})
     include("cmake/HunterGate.cmake")
     HunterGate(
-        URL "https://github.com/cpp-pm/hunter/archive/v0.23.263.tar.gz"
-        SHA1 "9b96c376bf3526163e81b7adb8db5a0ea8c7e1bf"
+        URL "https://github.com/cpp-pm/hunter/archive/v0.23.279.tar.gz"
+        SHA1 "0a8ede485c3e9c1ceed8ccb989ab6c0aba1f4db7"
     )
 endif()
 
@@ -31,7 +31,9 @@ if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     add_compile_options("-ftree-vectorize")
 endif()
 
-set(FILESYSTEM stdc++fs)
+if (NOT MSVC)
+    set(FILESYSTEM stdc++fs)
+endif()
 
 if (${HUNTER})
     hunter_add_package(Qt)
@@ -44,7 +46,7 @@ find_package(spdlog REQUIRED)
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-set(SRC "src/main.cpp" "src/mainwindow.cpp" "src/searchdialog.cpp"
+set(SOURCES "src/main.cpp" "src/mainwindow.cpp" "src/searchdialog.cpp"
         "src/image/image.cpp" "src/image/imagefinder.cpp" "src/image/imageinfo.cpp"
         "src/network/downloadhelper.cpp" "src/network/danbooruworker.cpp" "src/network/konachanworker.cpp"
         "src/network/gelbooruworker.cpp" "src/simdjson/simdjson.cpp")
@@ -56,9 +58,13 @@ set(HEADERS "include/utils.h" "include/logger.h" "include/mainwindow.h" "include
 set(FORMS "src/mainwindow.ui" "src/searchdialog.ui")
 set(RESOURCES "resources/imagedownloader.qrc")
 
+source_group(sources FILES ${SOURCES})
+source_group(headers FILES ${HEADERS})
+source_group(forms FILES ${FORMS})
+
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
 
-add_executable(${PROJECT_NAME} ${SRC} ${HEADERS} ${FORMS} ${RESOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${FORMS} ${RESOURCES})
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 if(PROFILE)
@@ -71,10 +77,7 @@ if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
       message(STATUS "clang-tidy not found.")
     else()
       message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
-      set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-checks=*,-clang-analyzer-alpha.*,-android-*,-fuchsia-*,-hicpp-use-auto,-modernize-use-auto,-hicpp-vararg,-cppcoreguidelines-pro-type-vararg,-readability-implicit-bool-conversion,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay")
-    endif()
-
-    if(CLANG_TIDY_EXE)
+      set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-checks=*,-clang-analyzer-alpha.*,-android-*,-fuchsia-*,-hicpp-use-auto,-modernize-use-auto,-modernize-use-trailing-return-type,-hicpp-vararg,-cppcoreguidelines-pro-type-vararg,-readability-implicit-bool-conversion,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay")
       set_target_properties(${PROJECT_NAME} PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
     endif()
 endif()
