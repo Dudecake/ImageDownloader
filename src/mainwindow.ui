@@ -64,6 +64,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="saveButton">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string>Save</string>
         </property>
@@ -71,6 +74,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="blackListButton">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string>BlackList</string>
         </property>
@@ -78,6 +84,9 @@
       </item>
       <item>
        <widget class="QComboBox" name="resBox">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <item>
          <property name="text">
           <string>Any</string>
@@ -137,6 +146,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="nextButton">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string>Next</string>
         </property>
@@ -144,6 +156,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="skipButton">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string>Next 5</string>
         </property>
@@ -151,6 +166,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="endButton">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string>End</string>
         </property>
@@ -179,6 +197,9 @@
        <width>116</width>
        <height>27</height>
       </rect>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
      </property>
      <property name="text">
       <string>Options</string>

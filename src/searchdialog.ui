@@ -70,6 +70,9 @@
       <verstretch>0</verstretch>
      </sizepolicy>
     </property>
+    <property name="cursor" stdset="0">
+     <cursorShape>IBeamCursor</cursorShape>
+    </property>
    </widget>
    <widget class="QLabel" name="ratingLabel">
     <property name="geometry">
@@ -92,6 +95,9 @@
       <width>93</width>
       <height>27</height>
      </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="currentIndex">
      <number>2</number>
@@ -148,6 +154,9 @@
       <width>111</width>
       <height>27</height>
      </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <item>
      <property name="text">

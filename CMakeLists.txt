@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.16)
 
 option(PROFILE "Profile using gperf" OFF)
 option(HUNTER "Use Hunter package manager" OFF)
@@ -6,8 +6,8 @@ option(HUNTER "Use Hunter package manager" OFF)
 if (${HUNTER})
     include("cmake/HunterGate.cmake")
     HunterGate(
-        URL "https://github.com/cpp-pm/hunter/archive/v0.23.279.tar.gz"
-        SHA1 "0a8ede485c3e9c1ceed8ccb989ab6c0aba1f4db7"
+        URL "https://github.com/cpp-pm/hunter/archive/v0.23.304.tar.gz"
+        SHA1 "cae9026e69d7d8333897663688a11f4232fb8826"
     )
 endif()
 
@@ -67,11 +67,12 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${FORMS} ${RESOURCES})
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+target_precompile_headers(${PROJECT_NAME} PUBLIC ${HEADERS})
 if(PROFILE)
     set(PROFILER "profiler")
 endif()
 
-if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     find_program(CLANG_TIDY_EXE NAMES "clang-tidy" DOC "Path to clang-tidy executable")
     if(NOT CLANG_TIDY_EXE)
       message(STATUS "clang-tidy not found.")
