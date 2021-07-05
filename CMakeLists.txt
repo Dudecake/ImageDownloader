@@ -1,15 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
 option(PROFILE "Profile using gperf" OFF)
-option(HUNTER "Use Hunter package manager" OFF)
-
-if (${HUNTER})
-    include("cmake/HunterGate.cmake")
-    HunterGate(
-        URL "https://github.com/cpp-pm/hunter/archive/v0.23.304.tar.gz"
-        SHA1 "cae9026e69d7d8333897663688a11f4232fb8826"
-    )
-endif()
 
 project(ImageDownloader)
 
@@ -35,13 +26,8 @@ if (NOT MSVC)
     set(FILESYSTEM stdc++fs)
 endif()
 
-if (${HUNTER})
-    hunter_add_package(Qt)
-    hunter_add_package(spdlog)
-endif()
-
-find_package(Qt5Core REQUIRED)
-find_package(Qt5Widgets REQUIRED)
+find_package(Qt6Core REQUIRED)
+find_package(Qt6Widgets REQUIRED)
 find_package(spdlog REQUIRED)
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -84,4 +70,4 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 endif()
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-target_link_libraries(${PROJECT_NAME} ${PROFILER} ${FILESYSTEM} pthread sqlite3 curl Qt5::Core Qt5::Widgets spdlog::spdlog)
+target_link_libraries(${PROJECT_NAME} ${PROFILER} ${FILESYSTEM} pthread sqlite3 curl Qt6::Core Qt6::Widgets spdlog::spdlog)
