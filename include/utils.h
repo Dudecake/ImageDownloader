@@ -186,4 +186,12 @@ inline size_t find_nth_of(const std::string &string, const char &character, cons
     return currentIndex;
 }
 
+inline std::string replace(std::string str, const std::string &pattern, const std::string &with) {
+    const size_t patternLen = pattern.length();
+    for (size_t pos = str.find(pattern); pos != std::string::npos; pos = str.find(pattern)) {
+        str.replace(pos, patternLen, with);
+    }
+    return str;
+}
+
 #endif // IMAGEDOWNLOADER_UTILS_H

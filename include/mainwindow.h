@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <future>
 #include <memory>
+#include <deque>
 
 #include "image/image.h"
 #include "logger.h"

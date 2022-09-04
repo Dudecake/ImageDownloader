@@ -2,6 +2,8 @@
 
 #include <functional>
 
+#include "utils.h"
+
 int network::DownloadHelper::runningHandles = 0;
 std::mutex network::DownloadHelper::mutex = std::mutex();
 
@@ -11,7 +13,7 @@ std::string network::DownloadHelper::download(const std::string &url)
     std::string buffer;
 
     mutex.lock();
-    curl_easy_setopt(localCurl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(localCurl, CURLOPT_URL, replace(url, " ", "%20").c_str());
     curl_easy_setopt(localCurl, CURLOPT_WRITEFUNCTION, writeCallBack);
     curl_easy_setopt(localCurl, CURLOPT_WRITEDATA, &buffer);
     curl_easy_setopt(localCurl, CURLOPT_FOLLOWLOCATION, 1);
@@ -31,7 +33,7 @@ std::vector<char> network::DownloadHelper::downloadImage(const std::string &url,
     buffer.reserve(fileSize);
 
     mutex.lock();
-    curl_easy_setopt(localCurl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(localCurl, CURLOPT_URL, replace(url, " ", "%20").c_str());
     curl_easy_setopt(localCurl, CURLOPT_WRITEFUNCTION, vectorCallBack);
     curl_easy_setopt(localCurl, CURLOPT_WRITEDATA, &buffer);
     curl_easy_setopt(localCurl, CURLOPT_FOLLOWLOCATION, 1);
