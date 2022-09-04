@@ -20,8 +20,8 @@
 #include <QSettings>
 #include <QString>
 
-constexpr int queueLength = 51;
-constexpr int defaultSkipAmount = 5;
+static constexpr int queueLength = 51;
+static constexpr int defaultSkipAmount = 5;
 
 MainWindow::MainWindow(const std::vector<std::string> &args, QWidget *parent) :
     QMainWindow(parent), depth(0), workerFactory(network::WorkerFactory::getInstance()), ui(std::make_unique<Ui::MainWindow>()), images(queueLength), callback([&](const image::Image::image_s &image){ addToQueue(image); })
@@ -116,15 +116,15 @@ void MainWindow::skipMultiple(const int &count)
 
 void MainWindow::startNewWorker()
 {
-    constexpr int fullHdWidth = 1920;
-    constexpr int fullHdHeight = 1080;
-    constexpr int wuxgaHeight = 1200;
-    constexpr int qhdWidth = 2560;
-    constexpr int qhdHeight = 1440;
-    constexpr int wqxgaHeight = 1600;
-    constexpr int uhdWidth = 3840;
-    constexpr int uhdHeight = 2160;
-    constexpr int wquxgaHeight = 2400;
+    static constexpr int fullHdWidth = 1920;
+    static constexpr int fullHdHeight = 1080;
+    static constexpr int wuxgaHeight = 1200;
+    static constexpr int qhdWidth = 2560;
+    static constexpr int qhdHeight = 1440;
+    static constexpr int wqxgaHeight = 1600;
+    static constexpr int uhdWidth = 3840;
+    static constexpr int uhdHeight = 2160;
+    static constexpr int wquxgaHeight = 2400;
     switch (currentIndex)
     {
         case 0:

@@ -24,7 +24,7 @@ void SearchDialog::setWorkerIndex(const uint8_t &index)
 
 SearchOptions SearchDialog::getOptions()
 {
-    constexpr std::array ratings = {
+    static constexpr std::array ratings = {
         image::Image::Rating::All,
         image::Image::Rating::Safe,
         image::Image::Rating::Safe_Questionable,
