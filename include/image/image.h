@@ -185,6 +185,7 @@ namespace image
             static std::string forbiddenChars = "()\\<>";
             return forbiddenChars.find_first_of(c) != std::string::npos;
         }
+        static std::string getFolderName(const Fraction &) const;
         std::optional<std::vector<char>> sampleImage;
         std::optional<std::vector<char>> image;
         int64_t imageId{-1};
@@ -198,8 +199,38 @@ namespace image
         char rating{'s'};
         size_t fileSize{0L};
         size_t sampleFileSize{0L};
-        std::string getFolderName(const Fraction &) const;
     };
 };  // namespace image
+
+#ifdef SIMDJSON_H
+template <> struct fmt::formatter<simdjson::dom::element_type> : formatter<std::string> {
+    template <typename FormatContext> auto format(const simdjson::dom::element_type &type, FormatContext &ctx) -> decltype(ctx.out()) {
+        std::string result = "undefined";
+        switch (type) {
+            case simdjson::dom::element_type::ARRAY:
+                result = "array";
+                break;
+            case simdjson::dom::element_type::OBJECT:
+                result = "array";
+                break;
+            case simdjson::dom::element_type::INT64:
+            case simdjson::dom::element_type::UINT64:
+            case simdjson::dom::element_type::DOUBLE:
+                result = "number";
+                break;
+            case simdjson::dom::element_type::STRING:
+                result = "string";
+                break;
+            case simdjson::dom::element_type::BOOL:
+                result = "boolean";
+                break;
+            case simdjson::dom::element_type::NULL_VALUE:
+                result = "null";
+                break;
+        }
+        return formatter<std::string>::format(result, ctx);
+    }
+};
+#endif // SIMDJSON_H
 
 #endif // IMAGE_H

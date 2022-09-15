@@ -9,6 +9,7 @@
 #include "image/image.h"
 #include "logger.h"
 #include "searchdialog.h"
+#include <deque>
 
 namespace Ui {
     class MainWindow;
